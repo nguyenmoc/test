@@ -25,7 +25,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 interface UserProfile {
   id: string;
   name: string;
-  email: string;
   phone: string;
   bio: string;
   avatar: string;
@@ -33,8 +32,6 @@ interface UserProfile {
   location: string;
   website: string;
   birthday: string;
-  gender: string;
-  relationship: string;
   posts: number;
   followers: number;
   following: number;
@@ -42,10 +39,23 @@ interface UserProfile {
   notifications: boolean;
 }
 
+interface Table {
+  id: string;
+  number: number;
+  type: 'vip' | 'thường' | 'premium';
+  status: 'trống' | 'đang sử dụng' | 'đã đặt';
+  capacity: number;
+}
+
+const tableTypes = [
+  { value: 'thường', label: 'Bàn thường', color: '#6b7280' },
+  { value: 'vip', label: 'Bàn VIP', color: '#f59e0b' },
+  { value: 'premium', label: 'Bàn Premium', color: '#8b5cf6' },
+];
+
 const initialProfile: UserProfile = {
   id: '1',
   name: 'Nguyễn Thành Nam',
-  email: 'nguyenvana@email.com',
   phone: '0123456789',
   bio: 'Yêu thích công nghệ và du lịch. Đam mê khám phá những điều mới mẻ.',
   avatar: 'https://i.pravatar.cc/150?img=10',
@@ -53,8 +63,6 @@ const initialProfile: UserProfile = {
   location: 'Hà Nội, Việt Nam',
   website: 'https://mywebsite.com',
   birthday: '15/01/1990',
-  gender: 'Nam',
-  relationship: 'Độc thân',
   posts: 42,
   followers: 1205,
   following: 356,
@@ -66,8 +74,15 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [tableModalVisible, setTableModalVisible] = useState(false);
   const [editingField, setEditingField] = useState<string>('');
   const [tempValue, setTempValue] = useState('');
+  const [tables, setTables] = useState<Table[]>([]);
+  const [newTable, setNewTable] = useState({
+    number: '',
+    type: 'thường' as 'vip' | 'thường' | 'premium',
+    capacity: '',
+  });
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState(false);
 
@@ -136,6 +151,40 @@ export default function ProfileScreen() {
     Alert.alert('Thành công', 'Đã cập nhật thông tin');
   };
 
+  const openTableModal = () => {
+    setNewTable({
+      number: '',
+      type: 'thường',
+      capacity: '',
+    });
+    setTableModalVisible(true);
+  };
+
+  const createTable = () => {
+    if (!newTable.number || !newTable.capacity) {
+      Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    const tableExists = tables.find(table => table.number === parseInt(newTable.number));
+    if (tableExists) {
+      Alert.alert('Lỗi', 'Số bàn đã tồn tại');
+      return;
+    }
+
+    const table: Table = {
+      id: Date.now().toString(),
+      number: parseInt(newTable.number),
+      type: newTable.type,
+      capacity: parseInt(newTable.capacity),
+      status: 'trống',
+    };
+
+    setTables(prev => [...prev, table].sort((a, b) => a.number - b.number));
+    setTableModalVisible(false);
+    Alert.alert('Thành công', 'Đã tạo bàn mới');
+  };
+
   const getFieldLabel = (field: string) => {
     const labels: { [key: string]: string } = {
       name: 'Tên',
@@ -144,8 +193,6 @@ export default function ProfileScreen() {
       website: 'Website',
       phone: 'Số điện thoại',
       birthday: 'Ngày sinh',
-      gender: 'Giới tính',
-      relationship: 'Tình trạng hôn nhân',
     };
     return labels[field] || field;
   };
@@ -178,6 +225,28 @@ export default function ProfileScreen() {
       {editable && <Ionicons name="chevron-forward" size={16} color="#6b7280" />}
     </TouchableOpacity>
   );
+
+  const TableItem = ({ table }: { table: Table }) => {
+    const typeConfig = tableTypes.find(t => t.value === table.type);
+    return (
+      <View style={styles.tableItem}>
+        <View style={styles.tableItemLeft}>
+          <View style={[styles.tableTypeIndicator, { backgroundColor: typeConfig?.color }]} />
+          <View>
+            <Text style={styles.tableNumber}>Bàn {table.number}</Text>
+            <Text style={styles.tableType}>{typeConfig?.label} - {table.capacity} người</Text>
+            <Text style={[styles.tableStatus, 
+              table.status === 'trống' && { color: '#10b981' },
+              table.status === 'đang sử dụng' && { color: '#ef4444' },
+              table.status === 'đã đặt' && { color: '#f59e0b' }
+            ]}>
+              {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, 100],
@@ -263,13 +332,6 @@ export default function ProfileScreen() {
           />
 
           <ProfileItem
-            label="Email"
-            value={profile.email}
-            icon="mail-outline"
-            editable={false}
-          />
-
-          <ProfileItem
             label="Số điện thoại"
             value={profile.phone}
             icon="call-outline"
@@ -302,20 +364,6 @@ export default function ProfileScreen() {
             value={profile.birthday}
             icon="calendar-outline"
             onPress={() => openEditModal('birthday', profile.birthday)}
-          />
-
-          <ProfileItem
-            label="Giới tính"
-            value={profile.gender}
-            icon="person"
-            onPress={() => openEditModal('gender', profile.gender)}
-          />
-
-          <ProfileItem
-            label="Tình trạng hôn nhân"
-            value={profile.relationship}
-            icon="heart-outline"
-            onPress={() => openEditModal('relationship', profile.relationship)}
           />
         </View>
 
@@ -379,6 +427,7 @@ export default function ProfileScreen() {
         <KeyboardAvoidingView
           style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -393,7 +442,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalScrollView}>
+            <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
               <TextInput
                 style={[
                   styles.modalInput,
@@ -476,7 +525,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: 'absolute',
-    top: 250, // Position to overlap the cover image
+    top: 250,
     alignSelf: 'center',
     zIndex: 10,
     shadowColor: '#000',
@@ -508,7 +557,7 @@ const styles = StyleSheet.create({
   nameSection: {
     alignItems: 'center',
     backgroundColor: '#fff',
-    paddingTop: 20, // Space for overlapped avatar
+    paddingTop: 20,
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
@@ -558,6 +607,28 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  addButtonText: {
+    color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
   profileItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -584,6 +655,56 @@ const styles = StyleSheet.create({
   profileItemValue: {
     fontSize: 16,
     color: '#111827',
+  },
+  tableItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  tableItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tableTypeIndicator: {
+    width: 4,
+    height: 40,
+    borderRadius: 2,
+    marginRight: 12,
+  },
+  tableNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  tableType: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  tableStatus: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 16,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6b7280',
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 4,
   },
   settingItem: {
     flexDirection: 'row',
@@ -629,8 +750,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '70%',
+    maxHeight: '50%',
+    minHeight: 250,
   },
+
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -656,19 +779,17 @@ const styles = StyleSheet.create({
   },
   modalScrollView: {
     flex: 1,
-    maxHeight: 150, // Limit height to prevent keyboard issues
+    maxHeight: 200,
   },
   modalInput: {
-    margin: 16,
     padding: 12,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    backgroundColor: '#f9fafb',
+    color: '#1f2937',
+    marginBottom: 16,
   },
   modalTextArea: {
-    height: 100,
+    height: 120,
     textAlignVertical: 'top',
+    paddingTop: 12,
   },
 });
