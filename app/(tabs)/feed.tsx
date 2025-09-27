@@ -99,22 +99,7 @@ export default function FeedScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1f2937" />
 
-      {/* <AnimatedHeader
-        title="Combo Hot"
-        headerTranslateY={headerTranslateY}
-      /> */}
-
-      <Animated.ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
-        scrollEventThrottle={16}
-      >
-        {/* Banner Carousel */}
+      {/* Banner Carousel */}
         <View style={styles.carouselContainer}>
           <ScrollView
             horizontal
@@ -142,6 +127,18 @@ export default function FeedScreen() {
             ))}
           </View>
         </View>
+
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
+        
 
         {/* Category Tabs */}
         <View style={styles.categoriesContainer}>

@@ -2,12 +2,12 @@ import { ComboItem } from '@/constants/barData';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
-    Dimensions,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     overflow: 'hidden',
+    marginBottom: 4
   },
   imageContainer: {
     position: 'relative',

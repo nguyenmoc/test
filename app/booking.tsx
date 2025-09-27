@@ -1,22 +1,24 @@
 // app/(tabs)/booking.tsx
+import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { combosData } from '@/constants/barData';
 import { useBooking } from '@/hooks/useBooking';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Animated,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -40,6 +42,7 @@ export default function BookingScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const selectedCombo = combosData.find(combo => combo.id === bookingData.selectedCombo);
   const totalSteps = 4;
@@ -88,6 +91,27 @@ export default function BookingScreen() {
         return false;
     }
   };
+
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 1:
+        return 'Chọn ngày và giờ';
+      case 2:
+        return 'Số khách và loại bàn';
+      case 3:
+        return 'Combo và yêu cầu';
+      case 4:
+        return 'Thông tin đặt bàn';
+      default:
+        return 'Đặt bàn';
+    }
+  };
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, 0],
+    extrapolate: 'clamp',
+  });
 
   const renderStepIndicator = () => (
     <View style={styles.stepIndicator}>
@@ -371,14 +395,15 @@ export default function BookingScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor="#1f2937" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Đặt bàn</Text>
-        <View style={styles.placeholder} />
-      </View>
+      {/* Animated Header */}
+      <AnimatedHeader
+        title="Đặt bàn"
+        subtitle={`Bước ${currentStep}/${totalSteps}: ${getStepTitle()}`}
+        iconName="arrow-back"
+        onIconPress={handleBack}
+        headerTranslateY={headerTranslateY}
+        gradientColors={['#1f2937', '#374151']}
+      />
 
       {/* Step Indicator */}
       {renderStepIndicator()}
@@ -387,9 +412,18 @@ export default function BookingScreen() {
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: 20 }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
+        >
           {renderCurrentStep()}
-        </ScrollView>
+        </Animated.ScrollView>
 
         {/* Bottom Actions */}
         <View style={styles.bottomActions}>
@@ -435,27 +469,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#1f2937',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  placeholder: {
-    width: 40,
-  },
 
   // Step Indicator
   stepIndicator: {
@@ -465,6 +478,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: '#fff',
     marginBottom: 10,
+    marginTop: 40, // Space for animated header
   },
   stepContainer: {
     flexDirection: 'row',
@@ -695,6 +709,7 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     fontSize: 16,
     marginBottom: 16,
+    marginTop: 20
   },
 
   // Summary
