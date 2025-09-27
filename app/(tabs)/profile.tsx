@@ -178,8 +178,7 @@ export default function ProfileScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#1f2937" />
 
       <AnimatedHeader
-        title="Smoker App"
-        subtitle="Khám phá ngay"
+        title="Hồ Sơ"
         iconName="log-out-outline"
         onIconPress={handleLogout}
         headerTranslateY={headerTranslateY}
@@ -411,7 +410,7 @@ const styles = StyleSheet.create({
   coverContainer: {
     position: 'relative',
     height: 300,
-    marginTop: 40,
+    marginTop: 30,
   },
   coverImage: {
     width: '100%',

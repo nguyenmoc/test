@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
   FlatList,
@@ -14,7 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -182,10 +181,9 @@ export default function NewFeedScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#1f2937" />
 
       <AnimatedHeader
-        title="Smoker App"
-        subtitle="Khám phá ngay"
-        iconName="search-outline"
-        onIconPress={() => Alert.alert('Search')}
+        title="Combo Hot"
+        // iconName="search-outline"
+        // onIconPress={() => Alert.alert('Search')}
         headerTranslateY={headerTranslateY}
       />
 
@@ -312,7 +310,7 @@ const styles = StyleSheet.create({
   // Banner Styles
   carouselContainer: {
     height: 280,
-    marginTop: 40,
+    marginTop: 24,
   },
   bannerSlide: {
     width,
