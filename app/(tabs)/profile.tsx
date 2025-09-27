@@ -14,7 +14,6 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -31,12 +30,13 @@ interface UserProfile {
   coverImage: string;
   location: string;
   website: string;
-  birthday: string;
+  tiktok: string;
+  facebook: string;
+  instagram: string;
   posts: number;
   followers: number;
   following: number;
-  isPrivate: boolean;
-  notifications: boolean;
+  balance: number; // Số tiền hiện có
 }
 
 const initialProfile: UserProfile = {
@@ -48,12 +48,13 @@ const initialProfile: UserProfile = {
   coverImage: 'https://picsum.photos/400/200?random=1',
   location: 'Hà Nội, Việt Nam',
   website: 'https://mywebsite.com',
-  birthday: '15/01/1990',
+  tiktok: '@username',
+  facebook: 'facebook.com/username',
+  instagram: '@username',
   posts: 42,
   followers: 1205,
   following: 356,
-  isPrivate: false,
-  notifications: true,
+  balance: 1250000, // 1,250,000 VND
 };
 
 export default function ProfileScreen() {
@@ -89,9 +90,20 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleTopUp = () => {
+    Alert.alert(
+      'Nạp tiền',
+      'Chọn phương thức nạp tiền',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { text: 'Chuyển khoản', onPress: () => console.log('Bank transfer') },
+        { text: 'Ví điện tử', onPress: () => console.log('E-wallet') },
+      ]
+    );
+  };
+
   const pickImage = useCallback(async (type: 'avatar' | 'cover') => {
     try {
-      // ImagePicker sẽ tự động xử lý quyền truy cập
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -133,9 +145,18 @@ export default function ProfileScreen() {
       location: 'Địa điểm',
       website: 'Website',
       phone: 'Số điện thoại',
-      birthday: 'Ngày sinh',
+      tiktok: 'TikTok',
+      facebook: 'Facebook',
+      instagram: 'Instagram',
     };
     return labels[field] || field;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(amount);
   };
 
   const ProfileItem = ({
@@ -183,6 +204,7 @@ export default function ProfileScreen() {
         onIconPress={handleLogout}
         headerTranslateY={headerTranslateY}
       />
+      
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -205,7 +227,7 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Avatar - Overlapping cover image */}
+        {/* Avatar */}
         <TouchableOpacity
           style={styles.avatarContainer}
           onPress={() => pickImage('avatar')}
@@ -220,6 +242,23 @@ export default function ProfileScreen() {
         <View style={styles.nameSection}>
           <Text style={styles.name}>{profile.name}</Text>
           <Text style={styles.bio}>{profile.bio}</Text>
+        </View>
+
+        {/* Balance Section */}
+        <View style={styles.balanceSection}>
+          <View style={styles.balanceContainer}>
+            <View style={styles.balanceLeft}>
+              <Ionicons name="wallet-outline" size={24} color="#10b981" />
+              <View style={styles.balanceText}>
+                <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
+                <Text style={styles.balanceAmount}>{formatCurrency(profile.balance)}</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.topUpButton} onPress={handleTopUp}>
+              <Ionicons name="add-circle" size={20} color="#fff" />
+              <Text style={styles.topUpText}>Nạp tiền</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats */}
@@ -276,62 +315,32 @@ export default function ProfileScreen() {
             icon="globe-outline"
             onPress={() => openEditModal('website', profile.website)}
           />
+        </View>
+
+        {/* Social Media Links */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mạng xã hội</Text>
 
           <ProfileItem
-            label="Ngày sinh"
-            value={profile.birthday}
-            icon="calendar-outline"
-            onPress={() => openEditModal('birthday', profile.birthday)}
+            label="TikTok"
+            value={profile.tiktok}
+            icon="logo-tiktok"
+            onPress={() => openEditModal('tiktok', profile.tiktok)}
           />
-        </View>
 
-        {/* Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cài đặt</Text>
+          <ProfileItem
+            label="Facebook"
+            value={profile.facebook}
+            icon="logo-facebook"
+            onPress={() => openEditModal('facebook', profile.facebook)}
+          />
 
-          <View style={styles.settingItem}>
-            <View style={styles.profileItemLeft}>
-              <Ionicons name="lock-closed-outline" size={20} color="#6b7280" />
-              <View style={styles.profileItemText}>
-                <Text style={styles.profileItemLabel}>Tài khoản riêng tư</Text>
-                <Text style={styles.settingDescription}>
-                  Chỉ những người theo dõi mới có thể xem bài viết của bạn
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={profile.isPrivate}
-              onValueChange={(value) =>
-                setProfile(prev => ({ ...prev, isPrivate: value }))
-              }
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.profileItemLeft}>
-              <Ionicons name="notifications-outline" size={20} color="#6b7280" />
-              <View style={styles.profileItemText}>
-                <Text style={styles.profileItemLabel}>Thông báo</Text>
-                <Text style={styles.settingDescription}>
-                  Nhận thông báo về hoạt động mới
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={profile.notifications}
-              onValueChange={(value) =>
-                setProfile(prev => ({ ...prev, notifications: value }))
-              }
-            />
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionSection}>
-          <TouchableOpacity style={styles.editProfileButton}>
-            <Ionicons name="create-outline" size={20} color="#2563eb" />
-            <Text style={styles.editProfileText}>Chỉnh sửa hồ sơ</Text>
-          </TouchableOpacity>
+          <ProfileItem
+            label="Instagram"
+            value={profile.instagram}
+            icon="logo-instagram"
+            onPress={() => openEditModal('instagram', profile.instagram)}
+          />
         </View>
       </Animated.ScrollView>
 
@@ -386,27 +395,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
   },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  logoutButton: {
-    padding: 8,
-  },
   coverContainer: {
     position: 'relative',
     height: 300,
@@ -432,14 +420,6 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 14,
     fontWeight: '500',
-  },
-  avatarSection: {
-    backgroundColor: '#fff',
-    paddingTop: 0,
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-    alignItems: 'center',
-    marginTop: -40,
   },
   avatarContainer: {
     position: 'absolute',
@@ -492,6 +472,49 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  balanceSection: {
+    backgroundColor: '#fff',
+    marginTop: 12,
+  },
+  balanceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  balanceLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  balanceText: {
+    marginLeft: 12,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 2,
+  },
+  balanceAmount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#10b981',
+  },
+  topUpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10b981',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  topUpText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
   statsContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -525,28 +548,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#eff6ff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  addButtonText: {
-    color: '#2563eb',
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 4,
-  },
   profileItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -574,89 +575,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
   },
-  tableItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  tableItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tableTypeIndicator: {
-    width: 4,
-    height: 40,
-    borderRadius: 2,
-    marginRight: 12,
-  },
-  tableNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  tableType: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  tableStatus: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#6b7280',
-    marginTop: 12,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: '#9ca3af',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  settingDescription: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginTop: 2,
-  },
-  actionSection: {
-    padding: 16,
-  },
-  editProfileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#2563eb',
-  },
-  editProfileText: {
-    color: '#2563eb',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
 
   // Modal Styles
   modalOverlay: {
@@ -671,7 +589,6 @@ const styles = StyleSheet.create({
     maxHeight: '50%',
     minHeight: 250,
   },
-
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
