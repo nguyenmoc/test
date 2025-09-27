@@ -1,9 +1,12 @@
+import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   FlatList,
   Image,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -122,6 +125,19 @@ const notificationsData: Notification[] = [
 
 export default function NotificationScreen() {
   const [notifications, setNotifications] = useState<Notification[]>(notificationsData);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [refreshing, setRefreshing] = useState(false);
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, -100],
+    extrapolate: 'clamp',
+  });
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 2000);
+  };
 
   // Get icon based on notification type
   const getNotificationIcon = (type: Notification['type']) => {
@@ -143,9 +159,9 @@ export default function NotificationScreen() {
 
   // Mark notification as read
   const markAsRead = useCallback((id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification.id === id
           ? { ...notification, isRead: true }
           : notification
       )
@@ -154,7 +170,7 @@ export default function NotificationScreen() {
 
   // Mark all as read
   const markAllAsRead = useCallback(() => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(notification => ({ ...notification, isRead: true }))
     );
     Alert.alert('Thành công', 'Đã đánh dấu tất cả là đã đọc');
@@ -165,7 +181,7 @@ export default function NotificationScreen() {
     if (!notification.isRead) {
       markAsRead(notification.id);
     }
-    
+
     // TODO: Navigate to specific screen based on notification type
     console.log('Notification pressed:', notification);
     Alert.alert(
@@ -211,23 +227,23 @@ export default function NotificationScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Thông báo</Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-            <Text style={styles.markAllText}>Đánh dấu tất cả</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <StatusBar barStyle="light-content" backgroundColor="#1f2937" />
+
+      <AnimatedHeader
+        title="Thông Báo"
+        iconName={unreadCount > 0 ? "checkmark-done-outline" : undefined}
+        onIconPress={unreadCount > 0 ? markAllAsRead : undefined}
+        headerTranslateY={headerTranslateY}
+      />
 
       {/* Unread Count */}
-      {unreadCount > 0 && (
+      {/* {unreadCount > 0 && (
         <View style={styles.unreadCountContainer}>
           <Text style={styles.unreadCountText}>
             {unreadCount} thông báo chưa đọc
           </Text>
         </View>
-      )}
+      )} */}
 
       {/* Notifications List */}
       <FlatList
@@ -296,6 +312,7 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+    marginTop: 30
   },
   notificationItem: {
     backgroundColor: '#fff',

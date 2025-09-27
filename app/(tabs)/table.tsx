@@ -1,12 +1,16 @@
+import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  RefreshControl,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -33,6 +37,12 @@ const initialTables: Table[] = [
   { id: '1', number: 1, type: 'thường', status: 'trống', capacity: 4 },
   { id: '2', number: 2, type: 'vip', status: 'đang sử dụng', capacity: 6 },
   { id: '3', number: 3, type: 'luxury', status: 'đã đặt', capacity: 8 },
+  { id: '4', number: 1, type: 'thường', status: 'trống', capacity: 4 },
+  { id: '5', number: 2, type: 'vip', status: 'đang sử dụng', capacity: 6 },
+  { id: '6', number: 3, type: 'luxury', status: 'đã đặt', capacity: 8 },
+  { id: '7', number: 1, type: 'thường', status: 'trống', capacity: 4 },
+  { id: '8', number: 2, type: 'vip', status: 'đang sử dụng', capacity: 6 },
+  { id: '9', number: 3, type: 'luxury', status: 'đã đặt', capacity: 8 },
 ];
 
 export default function TableManagementScreen() {
@@ -44,6 +54,21 @@ export default function TableManagementScreen() {
     type: 'thường' as 'vip' | 'luxury' | 'thường',
     capacity: '',
   });
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, -100],
+    extrapolate: 'clamp',
+  });
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 2000);
+  };
 
   const createTable = () => {
     if (!newTable.number || !newTable.capacity) {
@@ -80,9 +105,9 @@ export default function TableManagementScreen() {
             <Text style={styles.tableNumber}>Bàn {table.number}</Text>
             <Text style={styles.tableType}>{typeConfig?.label} - {table.capacity} người</Text>
             <Text style={[styles.tableStatus,
-              table.status === 'trống' && { color: '#10b981' },
-              table.status === 'đang sử dụng' && { color: '#ef4444' },
-              table.status === 'đã đặt' && { color: '#f59e0b' }
+            table.status === 'trống' && { color: '#10b981' },
+            table.status === 'đang sử dụng' && { color: '#ef4444' },
+            table.status === 'đã đặt' && { color: '#f59e0b' }
             ]}>
               {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
             </Text>
@@ -93,16 +118,26 @@ export default function TableManagementScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 120 }}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Quản lý bàn</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => setTableModalVisible(true)}>
-            <Ionicons name="add" size={20} color="#2563eb" />
-            <Text style={styles.addButtonText}>Thêm bàn</Text>
-          </TouchableOpacity>
-        </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#1f2937" />
 
+      <AnimatedHeader
+        title="Quản lý bàn"
+        iconName="add"
+        onIconPress={() => setTableModalVisible(true)}
+        headerTranslateY={headerTranslateY}
+      />
+
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120, marginTop: 40 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
         {tables.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="restaurant-outline" size={48} color="#9ca3af" />
@@ -188,7 +223,7 @@ export default function TableManagementScreen() {
             </View>
           </KeyboardAvoidingView>
         </Modal>
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -287,6 +322,7 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
     paddingHorizontal: 16,
     opacity: 0.8,
+    marginTop: 30
   },
   emptyStateText: {
     fontSize: 16,
