@@ -236,15 +236,6 @@ export default function NotificationScreen() {
         headerTranslateY={headerTranslateY}
       />
 
-      {/* Unread Count */}
-      {/* {unreadCount > 0 && (
-        <View style={styles.unreadCountContainer}>
-          <Text style={styles.unreadCountText}>
-            {unreadCount} thông báo chưa đọc
-          </Text>
-        </View>
-      )} */}
-
       {/* Notifications List */}
       <FlatList
         data={notifications}
@@ -312,7 +303,7 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
-    marginTop: 30
+    marginTop: 40
   },
   notificationItem: {
     backgroundColor: '#fff',
