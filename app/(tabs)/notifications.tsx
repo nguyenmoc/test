@@ -1,4 +1,5 @@
 import AnimatedHeader from '@/components/ui/AnimatedHeader';
+import { Notification, notificationsData } from '@/constants/notiData';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
 import {
@@ -6,127 +7,17 @@ import {
   Animated,
   FlatList,
   Image,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-interface Notification {
-  id: string;
-  type: 'like' | 'comment' | 'follow' | 'post' | 'mention';
-  user: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  time: string;
-  isRead: boolean;
-  postImage?: string;
-}
-
-const notificationsData: Notification[] = [
-  {
-    id: '1',
-    type: 'like',
-    user: {
-      name: 'Nguyễn Văn A',
-      avatar: 'https://i.pravatar.cc/100?img=1',
-    },
-    content: 'đã thích bài viết của bạn',
-    time: '5 phút trước',
-    isRead: false,
-    postImage: 'https://picsum.photos/60/60?random=1',
-  },
-  {
-    id: '2',
-    type: 'comment',
-    user: {
-      name: 'Trần Thị B',
-      avatar: 'https://i.pravatar.cc/100?img=2',
-    },
-    content: 'đã bình luận bài viết của bạn: "Bài viết rất hay!"',
-    time: '10 phút trước',
-    isRead: false,
-    postImage: 'https://picsum.photos/60/60?random=2',
-  },
-  {
-    id: '3',
-    type: 'follow',
-    user: {
-      name: 'Lê Minh C',
-      avatar: 'https://i.pravatar.cc/100?img=3',
-    },
-    content: 'đã bắt đầu theo dõi bạn',
-    time: '30 phút trước',
-    isRead: false,
-  },
-  {
-    id: '4',
-    type: 'like',
-    user: {
-      name: 'Phạm Thị D',
-      avatar: 'https://i.pravatar.cc/100?img=4',
-    },
-    content: 'và 5 người khác đã thích bài viết của bạn',
-    time: '1 giờ trước',
-    isRead: true,
-    postImage: 'https://picsum.photos/60/60?random=4',
-  },
-  {
-    id: '5',
-    type: 'mention',
-    user: {
-      name: 'Hoàng Văn E',
-      avatar: 'https://i.pravatar.cc/100?img=5',
-    },
-    content: 'đã nhắc đến bạn trong một bình luận',
-    time: '2 giờ trước',
-    isRead: true,
-  },
-  {
-    id: '6',
-    type: 'post',
-    user: {
-      name: 'Vũ Thị F',
-      avatar: 'https://i.pravatar.cc/100?img=6',
-    },
-    content: 'đã đăng một bài viết mới',
-    time: '3 giờ trước',
-    isRead: true,
-    postImage: 'https://picsum.photos/60/60?random=6',
-  },
-  {
-    id: '7',
-    type: 'comment',
-    user: {
-      name: 'Đặng Minh G',
-      avatar: 'https://i.pravatar.cc/100?img=7',
-    },
-    content: 'đã trả lời bình luận của bạn',
-    time: '1 ngày trước',
-    isRead: true,
-    postImage: 'https://picsum.photos/60/60?random=7',
-  },
-  {
-    id: '8',
-    type: 'like',
-    user: {
-      name: 'Bùi Thị H',
-      avatar: 'https://i.pravatar.cc/100?img=8',
-    },
-    content: 'đã thích bình luận của bạn',
-    time: '2 ngày trước',
-    isRead: true,
-  },
-];
-
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function NotificationScreen() {
   const [notifications, setNotifications] = useState<Notification[]>(notificationsData);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, 100],
@@ -193,6 +84,16 @@ export default function NotificationScreen() {
   // Get unread count
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  const renderListEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="notifications-outline" size={60} color="#d1d5db" />
+      <Text style={styles.emptyText}>Không có thông báo nào</Text>
+      <Text style={styles.emptySubText}>
+        Khi có thông báo mới, chúng sẽ hiển thị ở đây
+      </Text>
+    </View>
+  )
+
   const renderNotification = ({ item }: { item: Notification }) => (
     <TouchableOpacity
       style={[styles.notificationItem, !item.isRead && styles.unreadNotification]}
@@ -226,9 +127,6 @@ export default function NotificationScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <StatusBar barStyle="light-content" backgroundColor="#1f2937" />
-
       <AnimatedHeader
         title="Thông Báo"
         iconName={unreadCount > 0 ? "checkmark-done-outline" : undefined}
@@ -244,15 +142,13 @@ export default function NotificationScreen() {
         style={styles.list}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="notifications-outline" size={60} color="#d1d5db" />
-            <Text style={styles.emptyText}>Không có thông báo nào</Text>
-            <Text style={styles.emptySubText}>
-              Khi có thông báo mới, chúng sẽ hiển thị ở đây
-            </Text>
-          </View>
-        }
+        ListEmptyComponent={renderListEmpty}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom,
+          paddingTop: 70,
+        }}
       />
     </SafeAreaView>
   );
@@ -261,7 +157,7 @@ export default function NotificationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f3f4f6',
   },
   header: {
     flexDirection: 'row',
@@ -269,132 +165,161 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#111827',
+    fontFamily: 'System', // Use system font for better compatibility
   },
   markAllButton: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     backgroundColor: '#3b82f6',
-    borderRadius: 6,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   markAllText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   unreadCountContainer: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#eff6ff',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
   unreadCountText: {
     fontSize: 14,
     color: '#1d4ed8',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   list: {
     flex: 1,
-    marginTop: 40
   },
   notificationItem: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
+    marginHorizontal: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 3,
+    marginBottom: 8,
   },
   unreadNotification: {
-    backgroundColor: '#fef3cd',
+    backgroundColor: '#fefce8', // Softer yellow for unread notifications
+    borderLeftWidth: 4,
+    borderLeftColor: '#3b82f6', // Blue accent for unread items
   },
   notificationContent: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   avatarContainer: {
     position: 'relative',
     marginRight: 12,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  iconBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
+  iconBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#f3f4f6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
   textContainer: {
     flex: 1,
-    marginRight: 8,
+    marginRight: 12,
   },
   notificationText: {
-    fontSize: 15,
-    lineHeight: 20,
-    color: '#374151',
+    fontSize: 16,
+    lineHeight: 22,
+    color: '#1f2937',
+    fontFamily: 'System',
   },
   userName: {
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#111827',
   },
   timeText: {
     fontSize: 13,
     color: '#6b7280',
-    marginTop: 2,
+    marginTop: 4,
+    fontFamily: 'System',
   },
   postThumbnail: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
+    width: 48,
+    height: 48,
+    borderRadius: 8,
     marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   unreadDot: {
-    width: 8,
-    height: 8,
+    width: 10,
+    height: 10,
     backgroundColor: '#3b82f6',
-    borderRadius: 4,
+    borderRadius: 5,
     marginLeft: 8,
-    marginTop: 6,
+    marginTop: 8,
   },
   separator: {
     height: 1,
     backgroundColor: '#f3f4f6',
-    marginLeft: 72,
+    marginHorizontal: 12,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 100,
+    paddingTop: 120,
     paddingHorizontal: 32,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
-    color: '#6b7280',
+    color: '#374151',
     marginTop: 16,
     textAlign: 'center',
+    fontFamily: 'System',
   },
   emptySubText: {
-    fontSize: 14,
-    color: '#9ca3af',
+    fontSize: 15,
+    color: '#6b7280',
     marginTop: 8,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+    fontFamily: 'System',
   },
 });
