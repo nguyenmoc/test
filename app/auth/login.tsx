@@ -28,7 +28,7 @@ export default function LoginScreen() {
     }
 
     // 🔑 Fake logic check login
-    if (email === 'test@example.com' && password === '123456') {
+    if (email === 'namnt' && password === '123') {
       if (rememberMe) {
         // TODO: Lưu thông tin đăng nhập vào AsyncStorage
         console.log('Đã lưu thông tin đăng nhập');
@@ -53,7 +53,7 @@ export default function LoginScreen() {
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={'padding'}
       >
         <ScrollView 
           showsVerticalScrollIndicator={false}
