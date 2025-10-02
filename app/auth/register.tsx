@@ -50,7 +50,7 @@ export default function RegisterScreen() {
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={'padding'}
       >
         <ScrollView 
           showsVerticalScrollIndicator={false}

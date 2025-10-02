@@ -1,13 +1,14 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const isLoggedIn = true; 
+      const isLoggedIn = true;
       if (isLoggedIn) {
         router.replace('/(tabs)');
       } else {
@@ -19,13 +20,38 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>MyApp</Text>
-      <ActivityIndicator size="large" />
+      <View style={styles.logoContainer}>
+      <Image
+          source={require('@/assets/images/icon.png')}
+          style={styles.reactLogo}
+          contentFit="contain"
+        />
+        <Text style={styles.brandText}>SMOKER</Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 32, fontWeight: 'bold', marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    justifyContent: 'center', alignItems: 'center'
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  brandText: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: 2,
+    color: '#111827',
+    textTransform: 'uppercase',
+    marginTop: 20,
+  },
+  reactLogo: {
+    width: 180,
+    height: 180,
+  },
 });
