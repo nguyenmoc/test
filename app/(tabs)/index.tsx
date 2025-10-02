@@ -15,6 +15,7 @@ import {
   Modal,
   RefreshControl,
   ScrollView,
+  Share,
   StatusBar,
   StyleSheet,
   Text,
@@ -47,7 +48,7 @@ export default function HomeScreen() {
   const [postText, setPostText] = useState('');
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [currentImageIndexes, setCurrentImageIndexes] = useState<{[key: string]: number}>({});
+  const [currentImageIndexes, setCurrentImageIndexes] = useState<{ [key: string]: number }>({});
 
   const {
     posts,
@@ -111,16 +112,32 @@ export default function HomeScreen() {
     likePost(postId);
   }, [likePost]);
 
-  const handleShare = useCallback(async (post: Post) => {
-    Alert.alert(
-      'Chia sẻ',
-      `Bài viết của ${post.user.name}: "${post.content}"`,
-      [
-        { text: 'Sao chép link', onPress: () => console.log('Copy link') },
-        { text: 'Đóng', style: 'cancel' }
-      ]
-    );
-  }, []);
+  const handleShare = async (post: Post) => {
+    if (!post) return;
+
+    try {
+      const result = await Share.share({
+        message: `${post.content}\n\nXem thêm tại Smoker App`,
+        title: 'Chia sẻ bài viết',
+        url: `https://smoker.app/post/${post.id}`, // Thay bằng URL thật
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // Đã chia sẻ với activity type
+          console.log('Shared with activity type:', result.activityType);
+        } else {
+          // Đã chia sẻ
+          Alert.alert('Thành công', 'Đã chia sẻ bài viết');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Đã hủy
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể chia sẻ bài viết');
+    }
+  };
 
   const handleComment = useCallback((postId: string) => {
     router.push({
@@ -191,7 +208,7 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(image, index) => `${item.id}-image-${index}`}
             renderItem={({ item: image }) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.imageContainer}
                 onPress={() => handleComment(item.id)}
               >
@@ -313,7 +330,7 @@ export default function HomeScreen() {
             </View>
 
             {/* Content */}
-            <ScrollView 
+            <ScrollView
               style={styles.modalBody}
               showsVerticalScrollIndicator={false}
             >
@@ -327,9 +344,9 @@ export default function HomeScreen() {
               />
 
               {selectedImages.length > 0 && (
-                <ScrollView 
-                  horizontal 
-                  style={styles.imagesPreview} 
+                <ScrollView
+                  horizontal
+                  style={styles.imagesPreview}
                   showsHorizontalScrollIndicator={false}
                 >
                   {selectedImages.map((uri, index) => (
@@ -358,7 +375,7 @@ export default function HomeScreen() {
             {/* Submit Button */}
             <TouchableOpacity
               style={[
-                styles.submitBtn, 
+                styles.submitBtn,
                 (!postText.trim() && selectedImages.length === 0) && styles.submitBtnDisabled
               ]}
               onPress={submitPost}
