@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function NotificationScreen() {
-  // const [notifications, setNotifications] = useState<Notification[]>(notificationsData);
   const { notifications, unreadCount, isLoading, error, markAsRead, markAllAsRead, clearNotifications, refresh } =
     useNotifications();
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -28,10 +27,6 @@ export default function NotificationScreen() {
     outputRange: [0, -100],
     extrapolate: 'clamp',
   });
-
-  const handlePostPress = (postId: string) => {
-    
-  };
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -56,25 +51,6 @@ export default function NotificationScreen() {
     }
   };
 
-  // // Mark notification as read
-  // const markAsRead = useCallback((id: string) => {
-  //   setNotifications(prev =>
-  //     prev.map(notification =>
-  //       notification.id === id
-  //         ? { ...notification, isRead: true }
-  //         : notification
-  //     )
-  //   );
-  // }, []);
-
-  // // Mark all as read
-  // const markAllAsRead = useCallback(() => {
-  //   setNotifications(prev =>
-  //     prev.map(notification => ({ ...notification, isRead: true }))
-  //   );
-  //   Alert.alert('Thành công', 'Đã đánh dấu tất cả là đã đọc');
-  // }, []);
-
   // Handle notification press
   const handleNotificationPress = useCallback((notification: Notification) => {
     if (!notification.isRead) {
@@ -86,9 +62,6 @@ export default function NotificationScreen() {
       params: { id: notification.id }
     });
   }, [markAsRead]);
-
-  // Get unread count
-  // const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const renderListEmpty = () => (
     <View style={styles.emptyContainer}>
