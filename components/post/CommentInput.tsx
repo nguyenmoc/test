@@ -3,11 +3,11 @@ import React from 'react';
 import {
   ActivityIndicator,
   Image,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { styles } from './styles';
 
 interface CommentInputProps {
   value: string;
@@ -53,3 +53,45 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     </View>
   );
 };
+
+export const styles = StyleSheet.create({
+  // Comment Input styles
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  commentInputAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    maxHeight: 100,
+    fontSize: 16,
+    backgroundColor: '#f9fafb',
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1877f2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#d1d5db',
+  },
+});

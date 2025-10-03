@@ -10,28 +10,32 @@ import {
   ScrollView,
   Share,
   StatusBar,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
-import { CommentInput, CommentsList, EditPostModal, PostContent, PostMenu } from '@/components/post';
-import { styles } from '@/components/post/styles';
+import { CommentInput } from '@/components/post/CommentInput';
+import { CommentsList } from '@/components/post/CommentsList';
+import { EditPostModal } from '@/components/post/EditPostModal';
+import { PostContent } from '@/components/post/PostContent';
+import { PostMenu } from '@/components/post/PostMenu';
 import { usePostDetails } from '@/hooks/usePost';
 
 export default function PostDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { 
-    post, 
-    comments, 
-    loading, 
-    addComment, 
-    likeComment, 
-    likePost, 
-    deletePost, 
-    updatePost, 
-    currentUserId 
+  const {
+    post,
+    comments,
+    loading,
+    addComment,
+    likeComment,
+    likePost,
+    deletePost,
+    updatePost,
+    currentUserId
   } = usePostDetails(id!);
 
   const [commentText, setCommentText] = useState('');
@@ -99,7 +103,7 @@ export default function PostDetailScreen() {
     moreButtonRef.current?.measure((fx, fy, width, height, px, py) => {
       setMenuPosition({ x: px - 160, y: py + height + 8 });
       setIsMenuVisible(true);
-      
+
       Animated.spring(scaleAnim, {
         toValue: 1,
         useNativeDriver: true,
@@ -151,7 +155,7 @@ export default function PostDetailScreen() {
     if (!post) return;
 
     closeMenu();
-    
+
     setTimeout(() => {
       Alert.alert(
         'Xóa bài viết',
@@ -222,7 +226,7 @@ export default function PostDetailScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -260,7 +264,7 @@ export default function PostDetailScreen() {
         onSubmit={handleSubmitEdit}
       />
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
@@ -290,3 +294,63 @@ export default function PostDetailScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // Container styles
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+
+  // Header styles
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 48,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
+  headerRight: {
+    width: 40,
+  },
+  moreButton: {
+    padding: 8,
+    marginRight: -8,
+  },
+
+  // Loading & Error states
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+});

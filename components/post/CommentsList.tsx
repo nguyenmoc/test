@@ -3,11 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
   Image,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { styles } from './styles';
 
 interface CommentsListProps {
   comments: Comment[];
@@ -24,7 +24,7 @@ export const CommentsList: React.FC<CommentsListProps> = ({
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Vừa xong';
     if (diffInHours < 24) return `${diffInHours} giờ trước`;
     return `${Math.floor(diffInHours / 24)} ngày trước`;
@@ -35,18 +35,18 @@ export const CommentsList: React.FC<CommentsListProps> = ({
       <TouchableOpacity onPress={() => onUserPress(comment.userId)}>
         <Image source={{ uri: comment.user.avatar }} style={styles.commentAvatar} />
       </TouchableOpacity>
-      
+
       <View style={styles.commentContent}>
         <View style={styles.commentBubble}>
           <TouchableOpacity onPress={() => onUserPress(comment.userId)}>
             <Text style={styles.commentUserName}>{comment.user.name}</Text>
           </TouchableOpacity>
           <Text style={styles.commentText}>{comment.content}</Text>
-        </View> 
-        
+        </View>
+
         <View style={styles.commentActions}>
           <Text style={styles.commentTime}>{formatTime(comment.createdAt)}</Text>
-          
+
           <TouchableOpacity
             style={styles.commentLikeBtn}
             onPress={() => onLikeComment(comment.id)}
@@ -65,7 +65,7 @@ export const CommentsList: React.FC<CommentsListProps> = ({
               </Text>
             )}
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.commentReplyBtn}>
             <Text style={styles.commentReplyText}>Trả lời</Text>
           </TouchableOpacity>
@@ -79,11 +79,11 @@ export const CommentsList: React.FC<CommentsListProps> = ({
       <Text style={styles.commentsSectionTitle}>
         Bình luận ({comments.length})
       </Text>
-      
+
       {comments.map((comment) => (
         <CommentItem key={comment.id} comment={comment} />
       ))}
-      
+
       {comments.length === 0 && (
         <View style={styles.noCommentsContainer}>
           <Ionicons name="chatbubble-outline" size={48} color="#d1d5db" />
@@ -94,3 +94,96 @@ export const CommentsList: React.FC<CommentsListProps> = ({
     </View>
   );
 };
+
+export const styles = StyleSheet.create({
+  // Comments Section styles
+  commentsSection: {
+    backgroundColor: '#fff',
+  },
+  commentsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  commentItem: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f2f5',
+  },
+  commentAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 12,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentBubble: {
+    backgroundColor: '#f0f2f5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginBottom: 4,
+  },
+  commentUserName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 2,
+  },
+  commentText: {
+    fontSize: 14,
+    color: '#1a1a1a',
+    lineHeight: 20,
+  },
+  commentActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  commentTime: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginRight: 16,
+  },
+  commentLikeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  commentLikeText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  commentReplyBtn: {
+    paddingVertical: 2,
+  },
+  commentReplyText: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  noCommentsContainer: {
+    alignItems: 'center',
+    paddingVertical: 48,
+  },
+  noCommentsText: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginTop: 12,
+    fontWeight: '500',
+  },
+  noCommentsSubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 4,
+  },
+});

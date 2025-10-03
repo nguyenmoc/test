@@ -4,11 +4,11 @@ import {
   Dimensions,
   FlatList,
   Image,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { styles } from './styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -31,7 +31,7 @@ export const PostContent: React.FC<PostContentProps> = ({
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Vừa xong';
     if (diffInHours < 24) return `${diffInHours} giờ trước`;
     return `${Math.floor(diffInHours / 24)} ngày trước`;
@@ -111,7 +111,7 @@ export const PostContent: React.FC<PostContentProps> = ({
       </View>
 
       <View style={styles.postActions}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.actionButton}
           onPress={onLike}
         >
@@ -133,7 +133,7 @@ export const PostContent: React.FC<PostContentProps> = ({
           <Text style={styles.actionText}>Bình luận</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.actionButton}
           onPress={onShare}
         >
@@ -144,3 +144,125 @@ export const PostContent: React.FC<PostContentProps> = ({
     </View>
   );
 };
+
+export const styles = StyleSheet.create({
+  // Post Actions styles
+  postActions: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  actionText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+
+  // Post Content styles
+  postContainer: {
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingBottom: 12,
+  },
+  userAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 2,
+  },
+  postTime: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  postContent: {
+    paddingHorizontal: 16,
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#1a1a1a',
+    marginBottom: 16,
+  },
+
+  // Image Gallery styles
+  imageGalleryContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  imageContainer: {
+    width: screenWidth,
+  },
+  postImage: {
+    width: screenWidth,
+    height: 300,
+  },
+  imageCounter: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  imageCounterText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Post Stats styles
+  postStats: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  likesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  heartIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
+  likesText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  commentsText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+});
