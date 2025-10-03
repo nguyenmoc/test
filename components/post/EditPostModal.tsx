@@ -6,14 +6,13 @@ import {
   FlatList,
   Image,
   Modal,
-  SafeAreaView,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { styles } from './styles';
 
 interface EditPostModalProps {
   visible: boolean;
@@ -75,7 +74,7 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({
       onRequestClose={onClose}
       presentationStyle="pageSheet"
     >
-      <SafeAreaView style={styles.editModalContainer}>
+      <View style={styles.editModalContainer}>
         <View style={styles.editModalHeader}>
           <TouchableOpacity onPress={onClose} style={styles.editModalCloseBtn}>
             <Ionicons name="close" size={28} color="#1a1a1a" />
@@ -153,7 +152,116 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
+
+export const styles = StyleSheet.create({
+  // Edit Modal styles
+  editModalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  editModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    backgroundColor: '#fff',
+  },
+  editModalCloseBtn: {
+    padding: 4,
+  },
+  editModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  editModalSaveButton: {
+    backgroundColor: '#1877f2',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  editModalSaveButtonDisabled: {
+    backgroundColor: '#d1d5db',
+  },
+  editModalSaveText: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  editModalSaveTextDisabled: {
+    color: '#9ca3af',
+  },
+  editModalScroll: {
+    flex: 1,
+  },
+  editModalContent: {
+    padding: 16,
+  },
+  editUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  editUserAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  editUserName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  editInput: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#1a1a1a',
+    marginBottom: 16,
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  editImageList: {
+    marginBottom: 16,
+  },
+  editImageContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  editImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 12,
+  },
+  addImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#f9fafb',
+  },
+  addImageText: {
+    fontSize: 16,
+    color: '#1877f2',
+    marginLeft: 8,
+    fontWeight: '600',
+  },
+});

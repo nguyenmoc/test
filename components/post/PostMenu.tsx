@@ -3,11 +3,11 @@ import React from 'react';
 import {
   Animated,
   Modal,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { styles } from './styles';
 
 interface PostMenuProps {
   visible: boolean;
@@ -66,9 +66,9 @@ export const PostMenu: React.FC<PostMenuProps> = ({
             <Ionicons name="pencil" size={22} color="#1a1a1a" />
             <Text style={styles.menuText}>Sửa bài viết</Text>
           </TouchableOpacity>
-          
+
           <View style={styles.menuDivider} />
-          
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={onDelete}
@@ -82,3 +82,38 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  menuContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: 200,
+    paddingVertical: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginVertical: 4,
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#1a1a1a',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+})
