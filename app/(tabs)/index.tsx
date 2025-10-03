@@ -363,13 +363,13 @@ export default function HomeScreen() {
                 </ScrollView>
               )}
 
-              {/* Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.mediaButton} onPress={pickImage}>
-                  <Ionicons name="image-outline" size={28} color="#2563eb" />
-                  <Text style={styles.mediaButtonText}>Thêm ảnh</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={styles.addImageButton}
+                onPress={pickImage}
+              >
+                <Ionicons name="image-outline" size={24} color="#1877f2" />
+                <Text style={styles.addImageText}>Thêm ảnh</Text>
+              </TouchableOpacity>
             </ScrollView>
 
             {/* Submit Button */}
@@ -591,24 +591,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    marginTop: 8,
-  },
-  mediaButton: {
-    alignItems: 'center',
-    padding: 12,
-  },
-  mediaButtonText: {
-    marginTop: 6,
-    fontSize: 13,
-    color: '#2563eb',
-    fontWeight: '600',
-  },
   submitBtn: {
     backgroundColor: '#2563eb',
     padding: 16,
@@ -623,5 +605,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  addImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#f9fafb',
+  },
+  addImageText: {
+    fontSize: 16,
+    color: '#1877f2',
+    marginLeft: 8,
+    fontWeight: '600',
   },
 });

@@ -3,7 +3,6 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  FlatList,
   Image,
   Modal,
   ScrollView,
@@ -120,27 +119,23 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({
             />
 
             {editImages.length > 0 && (
-              <FlatList
-                data={editImages}
+              <ScrollView
                 horizontal
-                keyExtractor={(item, index) => `edit-image-${index}`}
-                renderItem={({ item, index }) => (
-                  <View style={styles.editImageContainer}>
-                    <Image
-                      source={{ uri: item }}
-                      style={styles.editImage}
-                    />
+                style={styles.imagesPreview}
+                showsHorizontalScrollIndicator={false}
+              >
+                {editImages.map((uri, index) => (
+                  <View key={index} style={styles.imageWrapper}>
+                    <Image source={{ uri }} style={styles.selectedImage} />
                     <TouchableOpacity
-                      style={styles.removeImageButton}
+                      style={styles.removeImageBtn}
                       onPress={() => handleRemoveImage(index)}
                     >
-                      <Ionicons name="close-circle" size={24} color="#fff" />
+                      <Ionicons name="close-circle" size={24} color="#ef4444" />
                     </TouchableOpacity>
                   </View>
-                )}
-                style={styles.editImageList}
-                showsHorizontalScrollIndicator={false}
-              />
+                ))}
+              </ScrollView>
             )}
 
             <TouchableOpacity
@@ -231,22 +226,6 @@ export const styles = StyleSheet.create({
   editImageList: {
     marginBottom: 16,
   },
-  editImageContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  editImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 12,
-  },
   addImageButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -263,5 +242,25 @@ export const styles = StyleSheet.create({
     color: '#1877f2',
     marginLeft: 8,
     fontWeight: '600',
+  },
+  imagesPreview: {
+    marginBottom: 16,
+  },
+  imageWrapper: {
+    position: 'relative',
+    marginRight: 12,
+    marginTop: 8
+  },
+  selectedImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+  },
+  removeImageBtn: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
   },
 });
