@@ -3,6 +3,8 @@ import React from 'react';
 import {
   Animated,
   Modal,
+  Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -32,7 +34,13 @@ export const PostMenu: React.FC<PostMenuProps> = ({
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent={true} // Đảm bảo modal che cả thanh trạng thái trên Android
     >
+      <StatusBar
+        translucent
+        backgroundColor="rgba(0, 0, 0, 0.4)"
+        barStyle="dark-content"
+      />
       <TouchableOpacity
         style={styles.menuOverlay}
         activeOpacity={1}
@@ -87,6 +95,11 @@ const styles = StyleSheet.create({
   menuOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    ...Platform.select({
+      android: {
+        paddingTop: StatusBar.currentHeight || 0, // Thêm paddingTop để che thanh trạng thái trên Android
+      },
+    }),
   },
   menuContainer: {
     backgroundColor: '#fff',
@@ -116,4 +129,4 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontWeight: '500',
   },
-})
+});
