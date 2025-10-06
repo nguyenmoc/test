@@ -10,10 +10,6 @@ export default function AuthLayout() {
         name="register" 
         options={{ title: 'Đăng Ký' }} 
       />
-      <Stack.Screen 
-        name="role" 
-        options={{ title: 'Lựa chọn mục đích' }} 
-      />
     </Stack>
   );
 }
