@@ -1,5 +1,6 @@
 import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { fieldLabels, mockPosts } from '@/constants/profileData';
+import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -49,6 +50,7 @@ type TabType = 'info' | 'posts' | 'photos';
 export default function ProfileScreen() {
   const router = useRouter();
   const userId = '1';
+  const { logout } = useAuth(); // Sử dụng hook useAuth để lấy hàm logout
 
   const {
     profile,
@@ -70,6 +72,7 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const allPhotos = getAllPhotos(mockPosts);
+  
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -90,7 +93,7 @@ export default function ProfileScreen() {
           text: 'Đăng xuất',
           style: 'destructive',
           onPress: () => {
-            router.replace('/auth/login');
+            logout(); // Gọi hàm logout từ hook
           },
         },
       ]

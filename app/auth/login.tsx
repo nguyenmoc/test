@@ -1,3 +1,4 @@
+import { useAuth } from '@/hooks/useAuth';
 import Checkbox from 'expo-checkbox';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -20,6 +21,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const { login } = useAuth(); // Sử dụng hook useAuth
 
   const onLogin = () => {
     if (!email.trim() || !password.trim()) {
@@ -27,16 +29,8 @@ export default function LoginScreen() {
       return;
     }
 
-    // 🔑 Fake logic check login
-    if (email === 'namnt' && password === '123') {
-      if (rememberMe) {
-        // TODO: Lưu thông tin đăng nhập vào AsyncStorage
-        console.log('Đã lưu thông tin đăng nhập');
-      }
-      router.replace('/(tabs)');
-    } else {
-      Alert.alert('Đăng nhập thất bại', 'Tên đăng nhập hoặc mật khẩu không đúng');
-    }
+    // Gọi hàm login từ hook
+    login(email, password, rememberMe);
   };
 
   const onGoRegister = () => {
