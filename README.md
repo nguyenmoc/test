@@ -1,7 +1,6 @@
-# Welcome to your Expo app 👋
-
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
+# Welcome to your Smoker app 👋
+Smoker là một ứng dụng mạng xã hội kết hợp với hệ thống quản lý quán bar, cho phép người dùng tương tác, đặt bàn, đăng bài và quản lý các hoạt động trong quán.
+Ứng dụng được phát triển bằng React Native + Expo, hỗ trợ cả Android và iOS.
 ## Get started
 
 1. Install dependencies
@@ -16,35 +15,36 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. build app
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+step 1: rm -rf android ios
+step 2: npx expo prebuild
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+build apk: 
+cd android && ./gradlew assembleRelease
 
 ```bash
-npm run reset-project
+cd android
+./gradlew assembleRelease
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+build ipa:
+//cho máy ảo
+npx expo run:ios --configuration Release 
 
-To learn more about developing your project with Expo, look at the following resources:
+//cho máy thật:
+npx expo run:ios --configuration Release --device
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Join the community
+Cấu trúc thư mục:
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Smoker-App/
+├── app/                  # Code chính (màn hình, router)
+├── components/           # Các component tái sử dụng
+├── assets/               # Hình ảnh, icon, splash
+├── hooks/                # Custom hooks
+├── utils/                # Hàm tiện ích
+├── package.json
+├── app.json              # Cấu hình Expo
+└── README.md
