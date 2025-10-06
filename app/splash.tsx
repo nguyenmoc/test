@@ -1,3 +1,4 @@
+import { useAuth } from '@/hooks/useAuth';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
@@ -5,23 +6,24 @@ import { StyleSheet, Text, View } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { authState } = useAuth(); // Sử dụng hook useAuth để lấy trạng thái đăng nhập
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const isLoggedIn = false;
-      if (isLoggedIn) {
+      // Kiểm tra trạng thái đăng nhập từ authState
+      if (authState.isAuthenticated) {
         router.replace('/(tabs)');
       } else {
         router.replace('/auth/login');
       }
     }, 1500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [authState.isAuthenticated]); // Thêm authState.isAuthenticated vào dependency array
 
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
-      <Image
+        <Image
           source={require('@/assets/images/logo.jpeg')}
           style={styles.reactLogo}
           contentFit="contain"
@@ -36,7 +38,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
-    justifyContent: 'center', alignItems: 'center'
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoContainer: {
     alignItems: 'center',
