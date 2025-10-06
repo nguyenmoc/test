@@ -1,4 +1,5 @@
 import AnimatedHeader from '@/components/ui/AnimatedHeader';
+import { Role } from '@/constants/authData';
 import { fieldLabels, mockPosts } from '@/constants/profileData';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -23,7 +24,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -33,7 +34,7 @@ const PHOTO_SIZE = (screenWidth - 4) / 3; // 3 ảnh 1 hàng với khoảng các
 // Lấy tất cả ảnh từ các bài viết
 const getAllPhotos = (posts: any[]) => {
   const photos: any[] = [];
-  posts.forEach(post => {
+  posts.forEach((post) => {
     post.images.forEach((image: string) => {
       photos.push({
         id: `${post.id}-${image}`,
@@ -50,8 +51,7 @@ type TabType = 'info' | 'posts' | 'photos';
 export default function ProfileScreen() {
   const router = useRouter();
   const userId = '1';
-  const { logout } = useAuth(); // Sử dụng hook useAuth để lấy hàm logout
-
+  const { authState, logout } = useAuth(); // Lấy authState để kiểm tra role
   const {
     profile,
     loading,
@@ -72,14 +72,10 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const allPhotos = getAllPhotos(mockPosts);
-  
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([
-      fetchProfile(),
-      refreshBalance(),
-    ]);
+    await Promise.all([fetchProfile(), refreshBalance()]);
     setRefreshing(false);
   }, [fetchProfile, refreshBalance]);
 
@@ -93,7 +89,7 @@ export default function ProfileScreen() {
           text: 'Đăng xuất',
           style: 'destructive',
           onPress: () => {
-            logout(); // Gọi hàm logout từ hook
+            logout();
           },
         },
       ]
@@ -107,35 +103,42 @@ export default function ProfileScreen() {
   const handlePostPress = (postId: string) => {
     router.push({
       pathname: '/post',
-      params: { id: postId }
+      params: { id: postId },
     });
   };
 
-  const pickImage = useCallback(async (type: 'avatar' | 'cover') => {
-    try {
-      setImageLoading(type);
+  const handleUpgradeAccount = () => {
+    router.push('/role'); // Điều hướng đến màn hình nâng cấp tài khoản
+  };
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: type === 'avatar' ? [1, 1] : [2, 1],
-        quality: 0.8,
-      });
+  const pickImage = useCallback(
+    async (type: 'avatar' | 'cover') => {
+      try {
+        setImageLoading(type);
 
-      if (!result.canceled) {
-        const success = await updateProfileImage(type, result.assets[0].uri);
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: type === 'avatar' ? [1, 1] : [2, 1],
+          quality: 0.8,
+        });
 
-        if (success) {
-          Alert.alert('Thành công', 'Đã cập nhật ảnh');
+        if (!result.canceled) {
+          const success = await updateProfileImage(type, result.assets[0].uri);
+
+          if (success) {
+            Alert.alert('Thành công', 'Đã cập nhật ảnh');
+          }
         }
+      } catch (error) {
+        console.error('Error picking image:', error);
+        Alert.alert('Lỗi', 'Không thể chọn ảnh');
+      } finally {
+        setImageLoading(null);
       }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Lỗi', 'Không thể chọn ảnh');
-    } finally {
-      setImageLoading(null);
-    }
-  }, [updateProfileImage]);
+    },
+    [updateProfileImage]
+  );
 
   const openEditModal = (field: string, currentValue: string) => {
     setEditingField(field);
@@ -174,7 +177,7 @@ export default function ProfileScreen() {
     value,
     icon,
     onPress,
-    editable = true
+    editable = true,
   }: {
     label: string;
     value: string;
@@ -218,10 +221,7 @@ export default function ProfileScreen() {
           showsHorizontalScrollIndicator={false}
           keyExtractor={(image, index) => `${item.id}-img-${index}`}
           renderItem={({ item: image }) => (
-            <Image
-              source={{ uri: image }}
-              style={styles.postImage}
-            />
+            <Image source={{ uri: image }} style={styles.postImage} />
           )}
           style={styles.postImages}
         />
@@ -247,10 +247,7 @@ export default function ProfileScreen() {
 
   // Render Photo Item
   const renderPhotoItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.photoItem}
-      onPress={() => handlePostPress(item.postId)}
-    >
+    <TouchableOpacity style={styles.photoItem} onPress={() => handlePostPress(item.postId)}>
       <Image source={{ uri: item.uri }} style={styles.photoImage} />
     </TouchableOpacity>
   );
@@ -311,6 +308,14 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/*Nâng cấp tài khoản */}
+      {authState.role === Role.USER && (
+        <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradeAccount}>
+          <Ionicons name="arrow-up-circle" size={20} color="#fff" />
+          <Text style={styles.upgradeText}>Nâng cấp tài khoản</Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
@@ -563,7 +568,7 @@ export default function ProfileScreen() {
               <TextInput
                 style={[
                   styles.modalInput,
-                  editingField === 'bio' && styles.modalTextArea
+                  editingField === 'bio' && styles.modalTextArea,
                 ]}
                 value={tempValue}
                 onChangeText={setTempValue}
@@ -579,7 +584,6 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -941,5 +945,21 @@ const styles = StyleSheet.create({
     height: 120,
     textAlignVertical: 'top',
     paddingTop: 12,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8b5cf6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
+  upgradeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
 });

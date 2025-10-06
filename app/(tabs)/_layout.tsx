@@ -1,5 +1,7 @@
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Role } from '@/constants/authData';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Tabs } from 'expo-router';
 import React from 'react';
@@ -8,6 +10,9 @@ export default function TabLayout() {
   const activeColor = '#2563eb';
   const inactiveColor = '#6b7280';
   const { unreadCount } = useNotifications();
+  const { authState } = useAuth();
+
+  const showTableTab = authState.role === Role.BAR_OWNER;
 
   return (
     <Tabs
@@ -49,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="table"
         options={{
-          href: true ? '/table' : null, // chỉ show với role quán bar
+          href: showTableTab ? '/table' : null,
           title: 'Quản lý',
           tabBarIcon: ({ color }: { color: string }) => (
             <IconSymbol size={28} name="table.fill" color={color} />
