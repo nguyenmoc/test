@@ -108,7 +108,21 @@ export default function ProfileScreen() {
   };
 
   const handleUpgradeAccount = () => {
-    router.push('/role'); // Điều hướng đến màn hình nâng cấp tài khoản
+    router.push('/role');
+  };
+
+  const handleFollowersPress = () => {
+    router.push({
+      pathname: '/follow',
+      params: { type: 'followers', userId: userId },
+    });
+  };
+
+  const handleFollowingPress = () => {
+    router.push({
+      pathname: '/follow',
+      params: { type: 'following', userId: userId },
+    });
   };
 
   const pickImage = useCallback(
@@ -317,7 +331,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       )}
 
-      <View style={styles.statsContainer}>
+      {/* <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{profile.posts}</Text>
           <Text style={styles.statLabel}>Bài viết</Text>
@@ -330,6 +344,31 @@ export default function ProfileScreen() {
           <Text style={styles.statNumber}>{profile.following}</Text>
           <Text style={styles.statLabel}>Đang theo dõi</Text>
         </View>
+      </View> */}
+
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{profile.posts}</Text>
+          <Text style={styles.statLabel}>Bài viết</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.statItem}
+          onPress={handleFollowersPress}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.statNumber}>{profile.followers.toLocaleString()}</Text>
+          <Text style={styles.statLabel}>Người theo dõi</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.statItem}
+          onPress={handleFollowingPress}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.statNumber}>{profile.following}</Text>
+          <Text style={styles.statLabel}>Đang theo dõi</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Tab Navigation */}
