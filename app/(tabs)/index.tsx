@@ -1,6 +1,6 @@
-// app/(tabs)/index.tsx
 import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { Post } from '@/constants/feedData';
+import { useAuth } from '@/hooks/useAuth';
 import { useFeed } from '@/hooks/useFeed';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,7 +10,6 @@ import {
   Alert,
   Animated,
   Dimensions,
-  FlatList,
   Image,
   Modal,
   RefreshControl,
@@ -49,6 +48,8 @@ export default function HomeScreen() {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [currentImageIndexes, setCurrentImageIndexes] = useState<{ [key: string]: number }>({});
+  const { authState } = useAuth();
+  const currentUserId = authState.currentId;
 
   const {
     posts,
@@ -59,6 +60,7 @@ export default function HomeScreen() {
     likePost,
     refresh,
   } = useFeed();
+
 
   const pickImage = useCallback(async () => {
     try {
@@ -109,7 +111,7 @@ export default function HomeScreen() {
   }, [postText, selectedImages, createPost, closeModal]);
 
   const handleLike = useCallback((postId: string) => {
-    likePost(postId);
+    // likePost(postId);
   }, [likePost]);
 
   const handleShare = async (post: Post) => {
@@ -139,7 +141,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleComment = useCallback((postId: string) => {
+  const handleComment = useCallback((postId: string) => {    
     router.push({
       pathname: '/post',
       params: { id: postId }
@@ -178,106 +180,196 @@ export default function HomeScreen() {
     }));
   };
 
-  const renderItem = ({ item }: { item: Post }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <TouchableOpacity onPress={() => handleUserPress(item.userId)}>
-          <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <TouchableOpacity onPress={() => handleUserPress(item.userId)}>
-            <Text style={styles.username}>{item.user.name}</Text>
+  const renderItem = ({ item }: { item: Post }) => {
+    const likeCount = Object.keys(item.likes || {}).length;
+    const commentCount = Object.keys(item.comments || {}).length;
+    // const isLiked = !!Object.values(item.likes || {}).find(
+    //   like => like.accountId === currentUserId
+    // );
+    const isLiked = !!currentUserId && !!Object.values(item.likes || {}).find(
+      like => like.accountId === currentUserId
+    );
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <TouchableOpacity onPress={() => handleUserPress(item.accountId)}>
+            <Image source={{ uri: item.authorAvatar }} style={styles.avatar} />
           </TouchableOpacity>
-          <Text style={styles.subText}>
-            {formatTime(item.createdAt)}
-            {item.location && ` • ${item.location}`}
+          <View style={styles.headerInfo}>
+            <TouchableOpacity onPress={() => handleUserPress(item.accountId)}>
+              <Text style={styles.username}>{item.authorName}</Text>
+            </TouchableOpacity>
+            <Text style={styles.subText}>
+              {formatTime(item.createdAt)}
+              {/* {item.location && ` • ${item.location}`} */}
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity onPress={() => handleComment(item._id)}>
+          <Text style={styles.content}>{item.content}</Text>
+        </TouchableOpacity>
+
+        {item.images && (
+          <View style={styles.imageGalleryContainer}>
+            <TouchableOpacity
+              style={styles.imageContainer}
+              onPress={() => handleComment(item._id)}
+            >
+              <Image
+                source={{ uri: item.images || "https://picsum.photos/400/300?random=10" }}
+                style={styles.postImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <View style={styles.statsContainer}>
+          <Text style={styles.statsText}>
+            {likeCount > 0 && `${likeCount} lượt thích`}
+            {likeCount > 0 && commentCount > 0 && ' • '}
+            {commentCount > 0 && `${commentCount} bình luận`}
           </Text>
         </View>
-      </View>
 
-      <TouchableOpacity onPress={() => handleComment(item.id)}>
-        <Text style={styles.content}>{item.content}</Text>
-      </TouchableOpacity>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => handleLike(item._id)}
+          >
+            <Ionicons
+              name={isLiked ? "heart" : "heart-outline"}
+              size={20}
+              color={isLiked ? "#ef4444" : "#6b7280"}
+            />
+            <Text style={[
+              styles.actionText,
+              isLiked && { color: '#ef4444' }
+            ]}>
+              {isLiked ? 'Đã thích' : 'Thích'}
+            </Text>
+          </TouchableOpacity>
 
-      {item.images.length > 0 && (
-        <View style={styles.imageGalleryContainer}>
-          <FlatList
-            data={item.images}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(image, index) => `${item.id}-image-${index}`}
-            renderItem={({ item: image }) => (
-              <TouchableOpacity
-                style={styles.imageContainer}
-                onPress={() => handleComment(item.id)}
-              >
-                <Image
-                  source={{ uri: image }}
-                  style={styles.postImage}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            )}
-            snapToInterval={screenWidth}
-            decelerationRate="fast"
-            onScroll={(event) => handleImageScroll(event, item.id)}
-            scrollEventThrottle={16}
-          />
-          {item.images.length > 1 && (
-            <View style={styles.imageCounter}>
-              <Text style={styles.imageCounterText}>
-                {(currentImageIndexes[item.id] || 0) + 1}/{item.images.length}
-              </Text>
-            </View>
-          )}
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => handleComment(item._id)}
+          >
+            <Ionicons name="chatbubble-outline" size={18} color="#6b7280" />
+            <Text style={styles.actionText}>Bình luận</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => handleShare(item)}
+          >
+            <Ionicons name="share-outline" size={18} color="#6b7280" />
+            <Text style={styles.actionText}>Chia sẻ</Text>
+          </TouchableOpacity>
         </View>
-      )}
-
-      <View style={styles.statsContainer}>
-        <Text style={styles.statsText}>
-          {item.likes > 0 && `${item.likes} lượt thích`}
-          {item.likes > 0 && item.commentsCount > 0 && ' • '}
-          {item.commentsCount > 0 && `${item.commentsCount} bình luận`}
-        </Text>
       </View>
+    )
+  }
 
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => handleLike(item.id)}
-        >
-          <Ionicons
-            name={item.isLiked ? "heart" : "heart-outline"}
-            size={20}
-            color={item.isLiked ? "#ef4444" : "#6b7280"}
-          />
-          <Text style={[
-            styles.actionText,
-            item.isLiked && { color: '#ef4444' }
-          ]}>
-            {item.isLiked ? 'Đã thích' : 'Thích'}
-          </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => handleComment(item.id)}
-        >
-          <Ionicons name="chatbubble-outline" size={18} color="#6b7280" />
-          <Text style={styles.actionText}>Bình luận</Text>
-        </TouchableOpacity>
+  // <View style={styles.card}>
+  // <View style={styles.cardHeader}>
+  //   <TouchableOpacity onPress={() => handleUserPress(item.userId)}>
+  //     <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
+  //   </TouchableOpacity>
+  //   <View style={styles.headerInfo}>
+  //     <TouchableOpacity onPress={() => handleUserPress(item.userId)}>
+  //       <Text style={styles.username}>{item.user.name}</Text>
+  //     </TouchableOpacity>
+  //     <Text style={styles.subText}>
+  //       {formatTime(item.createdAt)}
+  //       {item.location && ` • ${item.location}`}
+  //     </Text>
+  //   </View>
+  // </View>
 
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => handleShare(item)}
-        >
-          <Ionicons name="share-outline" size={18} color="#6b7280" />
-          <Text style={styles.actionText}>Chia sẻ</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  //   <TouchableOpacity onPress={() => handleComment(item._id)}>
+  //     <Text style={styles.content}>{item.content}</Text>
+  //   </TouchableOpacity>
+
+  //   {item.images.length > 0 && (
+  //     <View style={styles.imageGalleryContainer}>
+  //       <FlatList
+  //         data={item.images}
+  //         horizontal
+  //         pagingEnabled
+  //         showsHorizontalScrollIndicator={false}
+  //         keyExtractor={(image, index) => `${item._id}-image-${index}`}
+  //         renderItem={({ item: image }) => (
+  //   <TouchableOpacity
+  //     style={styles.imageContainer}
+  //     onPress={() => handleComment(item._id)}
+  //   >
+  //     <Image
+  //       source={{ uri: image }}
+  //       style={styles.postImage}
+  //       resizeMode="cover"
+  //     />
+  //   </TouchableOpacity>
+  // )}
+  //         snapToInterval={screenWidth}
+  //         decelerationRate="fast"
+  //         onScroll={(event) => handleImageScroll(event, item._id)}
+  //         scrollEventThrottle={16}
+  //       />
+  //       {item.images.length > 1 && (
+  //         <View style={styles.imageCounter}>
+  //           <Text style={styles.imageCounterText}>
+  //             {(currentImageIndexes[item._id] || 0) + 1}/{item.images.length}
+  //           </Text>
+  //         </View>
+  //       )}
+  //     </View>
+  //   )}
+
+  // <View style={styles.statsContainer}>
+  //   <Text style={styles.statsText}>
+  //     {item.likes > 0 && `${item.likes} lượt thích`}
+  //     {item.likes > 0 && item.commentsCount > 0 && ' • '}
+  //     {item.commentsCount > 0 && `${item.commentsCount} bình luận`}
+  //   </Text>
+  // </View>
+
+  // <View style={styles.actions}>
+  //   <TouchableOpacity
+  //     style={styles.actionBtn}
+  //     onPress={() => handleLike(item._id)}
+  //   >
+  //     <Ionicons
+  //       name={item.isLiked ? "heart" : "heart-outline"}
+  //       size={20}
+  //       color={item.isLiked ? "#ef4444" : "#6b7280"}
+  //     />
+  //     <Text style={[
+  //       styles.actionText,
+  //       item.isLiked && { color: '#ef4444' }
+  //     ]}>
+  //       {item.isLiked ? 'Đã thích' : 'Thích'}
+  //     </Text>
+  //   </TouchableOpacity>
+
+  //   <TouchableOpacity
+  //     style={styles.actionBtn}
+  //     onPress={() => handleComment(item._id)}
+  //   >
+  //     <Ionicons name="chatbubble-outline" size={18} color="#6b7280" />
+  //     <Text style={styles.actionText}>Bình luận</Text>
+  //   </TouchableOpacity>
+
+  //   <TouchableOpacity
+  //     style={styles.actionBtn}
+  //     onPress={() => handleShare(item)}
+  //   >
+  //     <Ionicons name="share-outline" size={18} color="#6b7280" />
+  //     <Text style={styles.actionText}>Chia sẻ</Text>
+  //   </TouchableOpacity>
+  // </View>
+  // </View>
+  // );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -292,7 +384,7 @@ export default function HomeScreen() {
       <Animated.FlatList
         data={posts}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         style={[styles.container, { paddingTop: 40 }]}
         contentContainerStyle={{ paddingBottom: 40 }}
         ListHeaderComponent={<PostInputBox openModal={openModal} pickImage={pickImage} />}
@@ -468,10 +560,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   imageContainer: {
-    width: screenWidth,
+    width: screenWidth - 16,
   },
   postImage: {
-    width: screenWidth,
+    width: screenWidth - 16,
     height: 250,
   },
   imageCounter: {

@@ -1,6 +1,5 @@
 import { CreateCommentData, CreatePostData, Post, User } from "@/constants/feedData";
-
-const API_BASE_URL = 'https://your-api-domain.com/api';
+import { API_CONFIG } from "./apiConfig";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -9,18 +8,23 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-class FeedApiService {
+export class FeedApiService {
+  private token: string;
+
+  constructor(token: string) {
+    this.token = token;
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      const token = await this.getAuthToken();
       
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${this.token}`,
           ...options.headers,
         },
         ...options,
@@ -43,11 +47,6 @@ class FeedApiService {
     }
   }
 
-  private async getAuthToken(): Promise<string> {
-    // TODO: Get token from secure storage or auth context
-    return 'your-auth-token-here';
-  }
-
   async getCurrentUserId(): Promise<ApiResponse<string>> {
     try {
       const response = await this.makeRequest<{ userId: string }>('/auth/current-user');
@@ -66,7 +65,7 @@ class FeedApiService {
   }
 
   async getFeedPosts(page: number = 1, limit: number = 10): Promise<ApiResponse<Post[]>> {
-    return this.makeRequest<Post[]>(`/feed?page=${page}&limit=${limit}`);
+    return this.makeRequest<Post[]>(`/posts?page=${page}&limit=${limit}`);
   }
 
   async createPost(postData: CreatePostData): Promise<ApiResponse<Post>> {
@@ -147,5 +146,3 @@ class FeedApiService {
     });
   }
 }
-
-export const feedApi = new FeedApiService();

@@ -21,6 +21,7 @@ import { CommentsList } from '@/components/post/CommentsList';
 import { EditPostModal } from '@/components/post/EditPostModal';
 import { PostContent } from '@/components/post/PostContent';
 import { PostMenu } from '@/components/post/PostMenu';
+import { useAuth } from '@/hooks/useAuth';
 import { usePostDetails } from '@/hooks/usePost';
 
 export default function PostDetailScreen() {
@@ -35,8 +36,9 @@ export default function PostDetailScreen() {
     likePost,
     deletePost,
     updatePost,
-    currentUserId
   } = usePostDetails(id!);
+  const { authState } = useAuth();
+  const currentUserId = authState.currentId;
 
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
@@ -53,14 +55,14 @@ export default function PostDetailScreen() {
 
     setSubmittingComment(true);
     try {
-      const success = await addComment({
-        postId: post.id,
-        content: commentText.trim(),
-      });
+      // const success = await addComment({
+      //   postId: post.id,
+      //   content: commentText.trim(),
+      // });
 
-      if (success) {
-        setCommentText('');
-      }
+      // if (success) {
+      //   setCommentText('');
+      // }
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể gửi bình luận');
     } finally {
@@ -69,9 +71,9 @@ export default function PostDetailScreen() {
   };
 
   const handleLikePost = () => {
-    if (post) {
-      likePost(post.id);
-    }
+    // if (post) {
+    //   likePost(post.id);
+    // }
   };
 
   const handleShare = async () => {
@@ -81,7 +83,7 @@ export default function PostDetailScreen() {
       const result = await Share.share({
         message: `${post.content}\n\nXem thêm tại Smoker App`,
         title: 'Chia sẻ bài viết',
-        url: `https://smoker.app/post/${post.id}`,
+        url: `https://smoker.app/post/${post._id}`,
       });
 
       if (result.action === Share.sharedAction) {
@@ -126,7 +128,7 @@ export default function PostDetailScreen() {
   const handleEditPost = () => {
     if (!post) return;
     setEditContent(post.content);
-    setEditImages(post.images);
+    // setEditImages(post.images);
     closeMenu();
     setTimeout(() => setIsEditing(true), 200);
   };
@@ -135,15 +137,15 @@ export default function PostDetailScreen() {
     if (!post) return false;
 
     try {
-      const success = await updatePost(post.id, {
-        content: content.trim(),
-        images: images,
-      });
-      if (success) {
-        setIsEditing(false);
-        Alert.alert('Thành công', 'Bài viết đã được cập nhật');
-        return true;
-      }
+      // const success = await updatePost(post.id, {
+      //   content: content.trim(),
+      //   images: images,
+      // });
+      // if (success) {
+      //   setIsEditing(false);
+      //   Alert.alert('Thành công', 'Bài viết đã được cập nhật');
+      //   return true;
+      // }
       return false;
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể cập nhật bài viết');
@@ -156,33 +158,33 @@ export default function PostDetailScreen() {
 
     closeMenu();
 
-    setTimeout(() => {
-      Alert.alert(
-        'Xóa bài viết',
-        'Bạn có chắc chắn muốn xóa bài viết này?',
-        [
-          { text: 'Hủy', style: 'cancel' },
-          {
-            text: 'Xóa',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                const success = await deletePost(post.id);
-                if (success) {
-                  router.back();
-                  setTimeout(() => {
-                    Alert.alert('Thành công', 'Bài viết đã được xóa');
-                  }, 300);
-                }
-              } catch (error) {
-                Alert.alert('Lỗi', 'Không thể xóa bài viết');
-              }
-            },
-          },
-        ],
-        { cancelable: true }
-      );
-    }, 200);
+    // setTimeout(() => {
+    //   Alert.alert(
+    //     'Xóa bài viết',
+    //     'Bạn có chắc chắn muốn xóa bài viết này?',
+    //     [
+    //       { text: 'Hủy', style: 'cancel' },
+    //       {
+    //         text: 'Xóa',
+    //         style: 'destructive',
+    //         onPress: async () => {
+    //           try {
+    //             const success = await deletePost(post._id);
+    //             if (success) {
+    //               router.back();
+    //               setTimeout(() => {
+    //                 Alert.alert('Thành công', 'Bài viết đã được xóa');
+    //               }, 300);
+    //             }
+    //           } catch (error) {
+    //             Alert.alert('Lỗi', 'Không thể xóa bài viết');
+    //           }
+    //         },
+    //       },
+    //     ],
+    //     { cancelable: true }
+    //   );
+    // }, 200);
   };
 
   if (loading) {
@@ -221,7 +223,7 @@ export default function PostDetailScreen() {
     );
   }
 
-  const isPostOwner = post.userId === currentUserId;
+  const isPostOwner = post.accountId === currentUserId;
 
   return (
     <View style={styles.container}>
@@ -278,7 +280,7 @@ export default function PostDetailScreen() {
           />
 
           <CommentsList
-            comments={comments}
+            comments={post.comments}
             onUserPress={handleUserPress}
             onLikeComment={likeComment}
           />
