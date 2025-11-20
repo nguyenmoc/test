@@ -71,9 +71,9 @@ export default function PostDetailScreen() {
   };
 
   const handleLikePost = () => {
-    // if (post) {
-    //   likePost(post.id);
-    // }
+    if (post) {
+      likePost();
+    }
   };
 
   const handleShare = async () => {

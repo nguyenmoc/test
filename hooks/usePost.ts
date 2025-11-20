@@ -113,43 +113,53 @@ export const usePostDetails = (postId: string) => {
     // }
   };
 
-  const likePost = async () => {
-    // if (!post) return;
+const likePost = useCallback(async () => {
+  if (!post) return;
 
-    // setPost(prevPost => {
-    //   if (!prevPost) return prevPost;
-    //   return {
-    //     ...prevPost,
-    //     isLiked: !prevPost.isLiked,
-    //     likes: prevPost.isLiked ? prevPost.likes - 1 : prevPost.likes + 1,
-    //   };
-    // });
+  const currentUserId = authState.currentId;
+  if (!currentUserId) return;
 
-    // try {
-    //   const response = await feedApi.likePost(postId);
+  // Tính trạng thái đã like hay chưa
+  const isLiked = !!Object.values(post.likes || {}).find(
+    like => like.accountId === currentUserId
+  );
 
-    //   if (!response.success) {
-    //     setPost(prevPost => {
-    //       if (!prevPost) return prevPost;
-    //       return {
-    //         ...prevPost,
-    //         isLiked: !prevPost.isLiked,
-    //         likes: prevPost.isLiked ? prevPost.likes - 1 : prevPost.likes + 1,
-    //       };
-    //     });
-    //   }
-    // } catch (err) {
-    //   console.error('Error liking post:', err);
-    //   setPost(prevPost => {
-    //     if (!prevPost) return prevPost;
-    //     return {
-    //       ...prevPost,
-    //       isLiked: !prevPost.isLiked,
-    //       likes: prevPost.isLiked ? prevPost.likes - 1 : prevPost.likes + 1,
-    //     };
-    //   });
-    // }
-  };
+  // Optimistic update: cập nhật UI ngay
+  setPost(prevPost => {
+    if (!prevPost) return prevPost;
+
+    const updatedLikes = { ...prevPost.likes };
+    if (isLiked) {
+      // unlike
+      for (const key in updatedLikes) {
+        if (updatedLikes[key].accountId === currentUserId) {
+          delete updatedLikes[key];
+        }
+      }
+    } else {
+      // like
+      const newKey = Math.random().toString(36).substring(2, 15); // key tạm thời
+      updatedLikes[newKey] = {
+        accountId: currentUserId,
+        TypeRole: 'Account',
+      };
+    }
+
+    return { ...prevPost, likes: updatedLikes };
+  });
+
+  // Gọi API
+  try {
+    const response = await feedApi.likePost(postId);
+    if (!response.success) {
+      // revert nếu API fail
+      fetchPostDetails();
+    }
+  } catch (err) {
+    console.error('Error liking post:', err);
+    fetchPostDetails(); // revert
+  }
+}, [post, authState.currentId, feedApi, fetchPostDetails, postId]);
 
   const updatePost = async (postId: string, data: { content: string }): Promise<boolean> => {
     try {
