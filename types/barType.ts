@@ -1,3 +1,4 @@
+
 export interface AddressData {
   provinceId: string;
   districtId: string;
@@ -5,9 +6,6 @@ export interface AddressData {
   fullAddress: string;
 }
 
-/**
- * Data của một bar trong list (/api/bar)
- */
 export interface BarItem {
   barPageId: string;
   accountId: string;
@@ -25,18 +23,11 @@ export interface BarItem {
   createdAt: string;
 }
 
-/**
- * Response list bar (/api/bar)
- */
 export interface BarListResponse {
   status: string;
   data: BarItem[];
 }
 
-/**
- * Data của bar detail (/api/bar/:id)
- * API trả về key viết hoa nên ta convert về camelCase
- */
 export interface BarDetail {
   barPageId: string;
   accountId: string;
@@ -53,17 +44,32 @@ export interface BarDetail {
   addressData: AddressData | null;
 }
 
-/**
- * Response detail bar
- */
 export interface BarDetailResponse {
   status: string;
   data: BarDetail;
 }
 
-/**
- * Combo item (/api/combo/bar/:id)
- */
+export interface BarDetailApiResponse {
+  BarPageId: string;
+  AccountId: string;
+  BarName: string;
+  Avatar: string;
+  Background: string;
+  Address: string;
+  PhoneNumber: string;
+  Role: string;
+  Email: string;
+  Status: string | null;
+  created_at: string;
+  EntityAccountId: string;
+  addressData: AddressData | null;
+}
+
+export interface BarDetailApiResponseWrapper {
+  status: string;
+  data: BarDetailApiResponse;
+}
+
 export interface ComboItem {
   comboId: string;
   comboName: string;
@@ -73,9 +79,6 @@ export interface ComboItem {
   price: number;
 }
 
-/**
- * Response combo list
- */
 export interface ComboListResponse {
   status: string;
   data: ComboItem[];

@@ -28,10 +28,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const PostInputBox = ({ openModal, pickMedia }: { openModal: () => void; pickMedia: () => void }) => (
+const PostInputBox = ({ openModal, pickMedia, avatar }: { openModal: () => void; pickMedia: () => void; avatar: string | undefined;}) => (
   <View style={styles.postBox}>
     <Image
-      source={{ uri: 'https://i.pravatar.cc/100?img=10' }}
+      source={{ uri: avatar ?? 'https://i.pravatar.cc/100?img=10' }}
       style={styles.avatar}
     />
     <TouchableOpacity style={styles.postInput} onPress={openModal}>
@@ -70,6 +70,7 @@ export default function HomeScreen() {
   const [currentImageIndexes, setCurrentImageIndexes] = useState<{ [key: string]: number }>({});
   const { authState } = useAuth();
   const currentUserId = authState.currentId;
+  const avartarAuthor = authState.avatar;
 
   const {
     posts,
@@ -375,7 +376,7 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         ListHeaderComponent={
           <>
-            <PostInputBox openModal={openModal} pickMedia={pickMedia} />
+            <PostInputBox openModal={openModal} pickMedia={pickMedia} avatar={avartarAuthor}/>
             
             {/* ✅ Simple progress bar - chỉ có thanh thôi! */}
             {uploading && (

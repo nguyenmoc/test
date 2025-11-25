@@ -1,98 +1,654 @@
-import { useAuth } from "@/hooks/useAuth";
-import { BarApiService } from "@/services/barApi";
-import { BarDetail, Combo } from "@/types/barType";
-import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { useBar } from "@/hooks/useBar";
+import { ComboItem } from "@/types/barType";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useRef } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function BarDetailScreen() {
-  // Lấy param id
-const { id: barId } = useLocalSearchParams<{ id: string }>();
+const { width } = Dimensions.get("window");
 
-  const { authState } = useAuth();
-  const token = authState.token!;
-  const barApi = new BarApiService(token);
+const BarDetail: React.FC<any> = ({}) => {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const {
+    barDetail,
+    combos,
+    loadingDetail,
+    loadingCombo,
+    fetchBarDetail,
+    fetchCombos,
+  } = useBar();
 
-  const [barDetail, setBarDetail] = useState<BarDetail | null>(null);
-  const [combos, setCombos] = useState<Combo[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchBarDetail = useCallback(async () => {
-    if (!barId) return;
-
-
-    setLoading(true);
-    try {
-      const detailRes = await barApi.getBarDetail(barId);
-       console.log(detailRes);
-      if (detailRes.success && detailRes.data) {
-        setBarDetail(detailRes.data);
-
-        const combosRes = await barApi.getBarCombos(barId);
-
-        console.log(combosRes);
-        
-        if (combosRes.success && combosRes.data) {
-          setCombos(combosRes.data);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching bar detail:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [barId]);
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    fetchBarDetail();
-  }, [fetchBarDetail]);
+    fetchBarDetail(id);
+    fetchCombos(id);
+  }, [id]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!loadingDetail && barDetail) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [loadingDetail, barDetail]);
+
+  const handleBackPress = () => {
+    router.back();
+  };
+
+  const handleBookingPress = () => {
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // TODO: Call API đặt bàn ở đây
+    handleBookTable();
+  };
+
+  const handleBookTable = async () => {
+    try {
+      // Placeholder cho API call
+      Alert.alert(
+        "Đặt bàn",
+        `Bạn muốn đặt bàn tại ${barDetail?.barName}?`,
+        [
+          {
+            text: "Hủy",
+            style: "cancel",
+          },
+          {
+            text: "Xác nhận",
+            onPress: async () => {
+              // TODO: Thay bằng API call thực tế
+              // const response = await bookTable({
+              //   barId: id,
+              //   ...bookingData
+              // });
+              
+              Alert.alert("Thành công", "Đặt bàn thành công!");
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể đặt bàn. Vui lòng thử lại!");
+    }
+  };
+
+  const renderComboItem = ({ item, index }: { item: ComboItem; index: number }) => {
+    const animValue = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+      Animated.spring(animValue, {
+        toValue: 1,
+        delay: index * 100,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }).start();
+    }, []);
+
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Animated.View
+        style={[
+          styles.comboCard,
+          {
+            opacity: animValue,
+            transform: [
+              {
+                translateY: animValue.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              },
+              {
+                scale: animValue,
+              },
+            ],
+          },
+        ]}
+      >
+        <View style={styles.comboHeader}>
+          <View style={styles.comboIconContainer}>
+            <Ionicons name="beer-outline" size={24} color="#3b82f6" />
+          </View>
+        </View>
+        <Text style={styles.comboName} numberOfLines={2}>
+          {item.comboName}
+        </Text>
+        <Text style={styles.comboPrice}>{item.price.toLocaleString()}₫</Text>
+        {item.voucherApplyId && (
+          <View style={styles.voucherBadge}>
+            <Ionicons name="pricetag" size={12} color="#fff" />
+            <Text style={styles.voucherText}>Voucher</Text>
+          </View>
+        )}
+      </Animated.View>
+    );
+  };
+
+  if (loadingDetail) {
+    return (
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text>Đang tải...</Text>
+        <Text style={styles.loadingText}>Đang tải chi tiết quán...</Text>
       </View>
     );
   }
 
   if (!barDetail) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Không tìm thấy thông tin bar</Text>
-      </View>
+      <SafeAreaView style={styles.emptyContainer}>
+        <Ionicons name="sad-outline" size={64} color="#cbd5e1" />
+        <Text style={styles.emptyText}>Không tìm thấy quán bar</Text>
+        <Pressable style={styles.backButton} onPress={handleBackPress}>
+          <Text style={styles.backButtonText}>Quay lại</Text>
+        </Pressable>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 12 }}>
-        {barDetail.name}
-      </Text>
-      <Text style={{ marginBottom: 12 }}>{barDetail.address}</Text>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      {/* Header with Back Button */}
+      <View style={styles.headerOverlay}>
+        <Pressable
+          style={styles.backButtonCircle}
+          onPress={handleBackPress}
+          android_ripple={{ color: "rgba(255,255,255,0.3)", borderless: true }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </Pressable>
+        <Pressable style={styles.favoriteButton}>
+          <Ionicons name="heart-outline" size={24} color="#fff" />
+        </Pressable>
+      </View>
 
-      <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 8 }}>
-        Combo
-      </Text>
-      <FlatList
-        data={combos}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => (
-          <View
-            style={{
-              marginBottom: 12,
-              padding: 12,
-              backgroundColor: "#fff",
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{ fontWeight: "600" }}>{item.name}</Text>
-            <Text>{item.description}</Text>
-            <Text style={{ color: "#ef4444" }}>{item.price.toLocaleString()}đ</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Bar Image */}
+        <Animated.View
+          style={[
+            styles.imageContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <Image
+            source={{ uri: barDetail.background || barDetail.avatar }}
+            style={styles.barImage}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.7)"]}
+            style={styles.imageGradient}
+          />
+          {barDetail.role && (
+            <View style={styles.roleBadge}>
+              <Ionicons
+                name="checkmark-circle"
+                size={14}
+                color="#fff"
+                style={{ marginRight: 4 }}
+              />
+              <Text style={styles.roleText}>{barDetail.role}</Text>
+            </View>
+          )}
+        </Animated.View>
+
+        {/* Bar Info */}
+        <Animated.View
+          style={[
+            styles.barInfoCard,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <Text style={styles.barName}>{barDetail.barName}</Text>
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoIconContainer}>
+              <Ionicons name="location" size={18} color="#3b82f6" />
+            </View>
+            <Text style={styles.infoText}>
+              {barDetail.address ||
+                barDetail.addressData?.fullAddress ||
+                "Chưa cập nhật địa chỉ"}
+            </Text>
           </View>
-        )}
-      />
+
+          {barDetail.phoneNumber && (
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconContainer}>
+                <Ionicons name="call" size={18} color="#10b981" />
+              </View>
+              <Text style={styles.infoText}>{barDetail.phoneNumber}</Text>
+            </View>
+          )}
+
+          {barDetail.email && (
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconContainer}>
+                <Ionicons name="mail" size={18} color="#f59e0b" />
+              </View>
+              <Text style={styles.infoText}>{barDetail.email}</Text>
+            </View>
+          )}
+
+          {/* Quick Stats */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Ionicons name="time-outline" size={20} color="#64748b" />
+              <Text style={styles.statText}>18:00 - 02:00</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Ionicons name="star" size={20} color="#fbbf24" />
+              <Text style={styles.statText}>4.5</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Ionicons name="people-outline" size={20} color="#64748b" />
+              <Text style={styles.statText}>250+</Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Combos Section */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Combo đặc biệt</Text>
+            <Ionicons name="flame" size={20} color="#f97316" />
+          </View>
+
+          {loadingCombo ? (
+            <View style={styles.loadingComboContainer}>
+              <ActivityIndicator size="small" color="#3b82f6" />
+            </View>
+          ) : combos.length === 0 ? (
+            <View style={styles.emptyComboContainer}>
+              <Ionicons name="beer-outline" size={48} color="#cbd5e1" />
+              <Text style={styles.emptyComboText}>Chưa có combo nào</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={combos}
+              renderItem={renderComboItem}
+              keyExtractor={(item) => item.comboId}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.comboList}
+            />
+          )}
+        </Animated.View>
+
+        {/* Bottom Spacing */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* Floating Book Button */}
+      <Animated.View
+        style={[
+          styles.bookingButtonContainer,
+          {
+            transform: [{ scale: buttonScale }],
+          },
+        ]}
+      >
+        <Pressable
+          style={styles.bookingButton}
+          onPress={handleBookingPress}
+          android_ripple={{ color: "rgba(255,255,255,0.3)" }}
+        >
+          <LinearGradient
+            colors={["#3b82f6", "#2563eb"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.bookingButtonGradient}
+          >
+            <Ionicons name="calendar" size={24} color="#fff" />
+            <Text style={styles.bookingButtonText}>Đặt bàn ngay</Text>
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
     </SafeAreaView>
   );
-}
+};
+
+export default BarDetail;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#64748b",
+    fontWeight: "500",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    backgroundColor: "#f8fafc",
+  },
+  emptyText: {
+    fontSize: 18,
+    color: "#64748b",
+    marginTop: 16,
+    fontWeight: "600",
+  },
+  backButton: {
+    marginTop: 24,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    backgroundColor: "#3b82f6",
+    borderRadius: 24,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  headerOverlay: {
+    position: "absolute",
+    top: 60,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    zIndex: 10,
+  },
+  backButtonCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    backdropFilter: "blur(10px)",
+  },
+  favoriteButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageContainer: {
+    position: "relative",
+    height: 300,
+  },
+  barImage: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#e2e8f0",
+  },
+  imageGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 150,
+  },
+  roleBadge: {
+    position: "absolute",
+    top: 70,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 24,
+    backgroundColor: "#10b981",
+    shadowColor: "#10b981",
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  roleText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  barInfoCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: -40,
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  barName: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#0f172a",
+    marginBottom: 16,
+    letterSpacing: -0.5,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  infoIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  infoText: {
+    fontSize: 15,
+    color: "#475569",
+    flex: 1,
+    fontWeight: "500",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+  },
+  statItem: {
+    alignItems: "center",
+    gap: 6,
+  },
+  statText: {
+    fontSize: 14,
+    color: "#64748b",
+    fontWeight: "600",
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: "#e2e8f0",
+  },
+  section: {
+    paddingHorizontal: 16,
+    marginTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0f172a",
+  },
+  loadingComboContainer: {
+    paddingVertical: 40,
+    alignItems: "center",
+  },
+  emptyComboContainer: {
+    paddingVertical: 40,
+    alignItems: "center",
+  },
+  emptyComboText: {
+    fontSize: 15,
+    color: "#94a3b8",
+    marginTop: 12,
+    fontWeight: "500",
+  },
+  comboList: {
+    paddingVertical: 8,
+  },
+  comboCard: {
+    backgroundColor: "#fff",
+    padding: 18,
+    marginRight: 14,
+    borderRadius: 20,
+    width: 220,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  comboHeader: {
+    marginBottom: 12,
+  },
+  comboIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#eff6ff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  comboName: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#0f172a",
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  comboPrice: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#3b82f6",
+  },
+  voucherBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "#f97316",
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+  voucherText: {
+    fontSize: 12,
+    color: "#fff",
+    marginLeft: 4,
+    fontWeight: "600",
+  },
+  bookingButtonContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 16,
+    right: 16,
+  },
+  bookingButton: {
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#3b82f6",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  bookingButtonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 18,
+    gap: 10,
+  },
+  bookingButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+});
