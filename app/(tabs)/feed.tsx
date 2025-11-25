@@ -22,9 +22,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get("window");
 
-// ============================
-// 🎨 SKELETON LOADER COMPONENT
-// ============================
 const SkeletonCard = () => {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
@@ -62,9 +59,6 @@ const SkeletonCard = () => {
   );
 };
 
-// ============================
-// 🎭 EMPTY STATE COMPONENT
-// ============================
 const EmptyState = () => (
   <View style={styles.emptyContainer}>
     <Ionicons name="beer-outline" size={80} color="#cbd5e1" />
@@ -73,9 +67,6 @@ const EmptyState = () => (
   </View>
 );
 
-// ============================
-// 🎨 ANIMATED BAR CARD COMPONENT
-// ============================
 interface BarCardProps {
   item: BarItem;
   index: number;
@@ -97,9 +88,6 @@ const BarCard: React.FC<BarCardProps> = React.memo(({ item, index, onPress }) =>
 
   const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-  // ============================
-  // 📊 DATA HELPERS
-  // ============================
   const hasRating = item.averageRating !== null && item.reviewCount > 0;
   const displayAddress = item.address || item.addressData?.fullAddress || 'Chưa cập nhật địa chỉ';
   const hasPhone = !!item.phoneNumber;
@@ -206,9 +194,6 @@ export default function FeedScreen() {
   const barApi = new BarApiService(authState.token!!);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // ============================
-  // 📡 FETCH BARS
-  // ============================
   const fetchBars = useCallback(async (pageNum = 1, isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -220,7 +205,6 @@ export default function FeedScreen() {
       }
 
       const res = await barApi.getBars(pageNum, 10);
-console.log(res);
 
       if ( res.data) {
         const newBars = res.data;
@@ -243,9 +227,6 @@ console.log(res);
     }
   }, []);
 
-  // ============================
-  // 🔄 HANDLERS
-  // ============================
   const onLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
       fetchBars(page + 1);
@@ -263,23 +244,14 @@ console.log(res);
     });
   }, []);
 
-  // ============================
-  // 🎬 INITIAL LOAD
-  // ============================
   useEffect(() => {
     fetchBars(1, false);
   }, []);
 
-  // ============================
-  // 🎨 RENDER ITEM
-  // ============================
   const renderBarItem = useCallback(({ item, index }: { item: BarItem; index: number }) => (
     <BarCard item={item} index={index} onPress={handleBarPress} />
   ), [handleBarPress]);
 
-  // ============================
-  // 🎨 ANIMATED HEADER
-  // ============================
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 100],
     outputRange: [1, 0.95],
@@ -292,9 +264,6 @@ console.log(res);
     extrapolate: 'clamp',
   });
 
-  // ============================
-  // 🎬 MAIN RENDER
-  // ============================
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor="#0f172a" />

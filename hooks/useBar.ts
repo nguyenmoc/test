@@ -1,9 +1,11 @@
 import { BarApiService } from "@/services/barApi";
 import {
   BarDetail,
+  BarDetailApiResponseWrapper,
   BarItem,
-  ComboItem
+  ComboItem,
 } from "@/types/barType";
+import { mapBarDetail } from "@/utils/mapper";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 
@@ -24,14 +26,10 @@ export const useBar = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const { authState } = useAuth();
-  const token = authState.token!;
-  const barApi = new BarApiService(token);
+  const barApi = new BarApiService(authState.token!);
 
-  // ============================================================
-  // 🔹 Fetch list bars
-  // ============================================================
   const fetchBars = useCallback(
-    async (pageNum: number = 1, refresh: boolean = false) => {
+    async (pageNum: number = 1, refresh = false) => {
       if (refresh) setRefreshing(true);
       else setLoading(true);
 
@@ -41,13 +39,11 @@ export const useBar = () => {
         const response = await barApi.getBars(pageNum, 10);
 
         if (response.success && response.data) {
-          const list = response.data.data; // ⬅ Array BarItem[]
+          const list = response.data.data;
 
-          if (refresh || pageNum === 1) {
-            setBars(list);
-          } else {
-            setBars((prev) => [...prev, ...list]);
-          }
+          if (refresh) setBars(list);
+          else if (pageNum === 1) setBars(list);
+          else setBars((prev) => [...prev, ...list]);
 
           setPage(pageNum);
           setHasMore(list.length === 10);
@@ -55,19 +51,15 @@ export const useBar = () => {
           setError(response.message || "Không thể tải danh sách bar");
         }
       } catch (err) {
-        console.error("Error fetching bars:", err);
         setError("Lỗi tải danh sách bar");
       } finally {
-        setLoading(false);
         setRefreshing(false);
+        setLoading(false);
       }
     },
     [barApi]
   );
 
-  // ============================================================
-  // 🔹 Fetch bar detail
-  // ============================================================
   const fetchBarDetail = useCallback(
     async (barId: string) => {
       setLoadingDetail(true);
@@ -76,13 +68,15 @@ export const useBar = () => {
       try {
         const response = await barApi.getBarDetail(barId);
 
-        if (response.success && response.data) {
-          setBarDetail(response.data.data); // ⬅ barDetail
+        const raw = response as BarDetailApiResponseWrapper;
+
+        if (raw.data) {
+          const mapped = mapBarDetail(raw.data);
+          setBarDetail(mapped);
         } else {
-          setError(response.message || "Không thể tải thông tin bar");
+          setError("Không thể tải thông tin bar");
         }
       } catch (err) {
-        console.error("Error fetching bar detail:", err);
         setError("Lỗi tải thông tin bar");
       } finally {
         setLoadingDetail(false);
@@ -91,9 +85,6 @@ export const useBar = () => {
     [barApi]
   );
 
-  // ============================================================
-  // 🔹 Fetch combos
-  // ============================================================
   const fetchCombos = useCallback(
     async (barId: string) => {
       setLoadingCombo(true);
@@ -103,12 +94,11 @@ export const useBar = () => {
         const response = await barApi.getBarCombos(barId);
 
         if (response.success && response.data) {
-          setCombos(response.data.data); // ⬅ Array ComboItem[]
+          setCombos(response.data.data);
         } else {
           setError(response.message || "Không thể tải combos");
         }
       } catch (err) {
-        console.error("Error fetching combos:", err);
         setError("Lỗi tải combo");
       } finally {
         setLoadingCombo(false);
@@ -117,41 +107,22 @@ export const useBar = () => {
     [barApi]
   );
 
-  // ============================================================
-  // 🔹 Load bars lần đầu
-  // ============================================================
   useEffect(() => {
-    fetchBars(1, false);
+    fetchBars(1);
   }, [fetchBars]);
-
-  const refresh = useCallback(() => {
-    fetchBars(1, true);
-  }, [fetchBars]);
-
-  const loadMore = useCallback(() => {
-    if (!loading && hasMore) {
-      fetchBars(page + 1);
-    }
-  }, [loading, hasMore, page, fetchBars]);
 
   return {
     bars,
     barDetail,
     combos,
-
     loading,
     loadingDetail,
     loadingCombo,
-
     error,
     hasMore,
     refreshing,
-
     fetchBars,
     fetchBarDetail,
     fetchCombos,
-
-    loadMore,
-    refresh,
   };
 };
