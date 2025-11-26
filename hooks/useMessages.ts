@@ -1,5 +1,5 @@
 import { GetMessagesParams, MessageApiService, MessageType } from '@/services/messageApi';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface Message {
   _id: string;
@@ -37,6 +37,7 @@ interface UseMessagesReturn {
   sendMessage: (content: string, messageType?: MessageType) => Promise<boolean>;
   markAsRead: () => Promise<void>;
   createConversation: (participant1Id: string, participant2Id: string) => Promise<any>;
+  addMessage: (message: Message) => void;
 }
 
 export const useMessages = (messageApi: MessageApiService | null, conversationId: string, currentUserId: string | undefined): UseMessagesReturn => {
@@ -52,20 +53,24 @@ export const useMessages = (messageApi: MessageApiService | null, conversationId
       setLoading(true);
       setError(null);
 
-      const data = await messageApi.getMessages(conversationId, {
+      const response = await messageApi.getMessages(conversationId, {
         limit: 50,
         ...params
       });
 
+      // API returns { success, data, message, pagination }
+      const messagesData = response.data || [];
+      const pagination = response.pagination || {};
+
       if (params.before) {
         // Load more (older messages)
-        setMessages(prev => [...prev, ...data]);
+        setMessages(prev => [...prev, ...messagesData]);
       } else {
         // Initial load or refresh
-        setMessages(data || []);
+        setMessages(messagesData);
       }
 
-      setHasMore(data && data.length === 50);
+      setHasMore(pagination.hasMore || false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load messages');
     } finally {
@@ -116,6 +121,16 @@ export const useMessages = (messageApi: MessageApiService | null, conversationId
     }
   }, [messageApi]);
 
+  const addMessage = useCallback((message: Message) => {
+    setMessages(prev => [message, ...prev]);
+  }, []);
+
+  useEffect(() => {
+    if (conversationId && messageApi) {
+      loadMessages();
+    }
+  }, [conversationId, messageApi]);
+
   return {
     messages,
     loading,
@@ -125,5 +140,6 @@ export const useMessages = (messageApi: MessageApiService | null, conversationId
     sendMessage,
     markAsRead,
     createConversation,
+    addMessage,
   };
 };

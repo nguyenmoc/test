@@ -74,7 +74,7 @@ export class MessageApiService {
       ? "?" + new URLSearchParams(params as Record<string, string>).toString()
       : "";
     const response = await this.makeRequest<any>(`/messages/messages/${conversationId}${query}`);
-    return response.success ? response.data || [] : [];
+    return response.success ? response : { success: false, data: [] };
   }
 
   async sendMessage(

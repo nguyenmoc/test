@@ -59,6 +59,13 @@ export default function ConversationScreen() {
   const messageApi = token ? new MessageApiService(token) : null;
   const { socket, isConnected } = useSocket();
 
+  console.log('🔵 ConversationScreen - Component initialized:', {
+    conversationId,
+    currentUserId,
+    token: token ? 'Present' : 'Missing',
+    messageApi: messageApi ? 'Created' : 'Null'
+  });
+
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const headerTranslateY = new Animated.Value(0);
   const flatListRef = useRef<FlatList>(null);
@@ -67,35 +74,49 @@ export default function ConversationScreen() {
     messages,
     loading,
     error,
+    hasMore,
+    loadMessages,
     sendMessage: sendMessageHook,
-    markAsRead
+    markAsRead,
+    addMessage
   } = useMessages(messageApi, conversationId || '', currentUserId);
 
   useEffect(() => {
+    console.log('🔄 useEffect - conversationId changed:', conversationId);
     if (conversationId) {
       loadConversation();
     }
   }, [conversationId]);
 
   useEffect(() => {
+    console.log('📖 useEffect - markAsRead triggered:', { conversationId, currentUserId });
     // Mark messages as read when entering conversation
     if (conversationId && currentUserId) {
       markAsRead();
     }
-  }, [conversationId, currentUserId, markAsRead]);
+  }, [conversationId, currentUserId]);
 
   useEffect(() => {
+    console.log('🔌 useEffect - socket effect:', { socket: !!socket, conversationId, isConnected });
     if (socket && conversationId) {
       // Join conversation room
       socket.emit('join_conversation', conversationId);
+      console.log('🔌 Socket - Joined conversation:', conversationId);
 
       // Listen for new messages
       socket.on('new_message', (message: Message) => {
-        // Note: Real-time updates should be handled in useMessages or global state
-        console.log('New message received:', message);
+        console.log('📨 Socket - New message received:', {
+          id: message._id,
+          content: message.content,
+          sender: message.sender_id,
+          conversation: message.conversation_id
+        });
+        // Add new message to the list
+        addMessage(message);
       });
 
       return () => {
+        console.log('🔌 Socket - Leaving conversation:', conversationId);
         socket.off('new_message');
         socket.emit('leave_conversation', conversationId);
       };
@@ -103,27 +124,62 @@ export default function ConversationScreen() {
   }, [socket, conversationId]);
 
   const loadConversation = async () => {
-    if (!messageApi) return;
+    if (!messageApi) {
+      console.log('❌ loadConversation - No messageApi available');
+      return;
+    }
 
     try {
+      console.log('🔍 loadConversation - Loading conversation for ID:', conversationId);
       // For now, we'll get conversation details from conversations list
       const conversations = await messageApi.getConversations(authState.EntityAccountId);
+      console.log('📋 loadConversation - All conversations:', conversations.length, 'found');
       const conv = conversations.find((c: Conversation) => c._id === conversationId);
+      console.log('✅ loadConversation - Found conversation:', conv ? {
+        id: conv._id,
+        participants: conv.participants,
+        otherParticipants: conv.otherParticipants,
+        lastMessage: conv.last_message_content
+      } : 'Not found');
       setConversation(conv || null);
     } catch (error) {
-      console.error('Error loading conversation:', error);
+      console.error('❌ loadConversation - Error:', error);
+    }
+  };
+
+  const handleLoadMore = () => {
+    console.log('⬆️ handleLoadMore - Triggered:', { hasMore, loading, messagesCount: messages.length });
+    if (hasMore && !loading && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1]; // Since inverted, last message is oldest
+      console.log('⬆️ handleLoadMore - Loading more before message:', lastMessage._id);
+      loadMessages({ before: lastMessage._id });
+    } else {
+      console.log('⬆️ handleLoadMore - Skipped:', { hasMore, loading, messagesCount: messages.length });
     }
   };
 
   const handleSendMessage = async (content: string, messageType: MessageType = 'text') => {
+    console.log('📤 handleSendMessage - Sending:', { content: content.substring(0, 50), messageType, conversationId });
     const success = await sendMessageHook(content, messageType);
-    if (!success) {
+    console.log('📤 handleSendMessage - Result:', success);
+    if (success) {
+      // Reload messages to show the new message
+      console.log('📤 handleSendMessage - Reloading messages after send');
+      loadMessages();
+    } else {
       Alert.alert('Lỗi', 'Không thể gửi tin nhắn');
     }
   };
 
   const renderMessageItem = ({ item }: { item: Message }) => {
     const isMyMessage = item.sender_id === currentUserId;
+    console.log('💬 renderMessageItem - Rendering:', {
+      id: item._id,
+      content: item.content.substring(0, 30),
+      sender: item.sender_id,
+      isMyMessage,
+      time: item.createdAt
+    });
 
     return (
       <View style={[
@@ -186,6 +242,8 @@ export default function ConversationScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingTop: 60, paddingBottom: 20 }}
           onContentSizeChange={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.1}
         />
 
         <MessageInput
