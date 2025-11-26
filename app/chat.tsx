@@ -1,10 +1,12 @@
 import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { MessageApiService } from '@/services/messageApi';
+import publicProfileApi from '@/services/publicProfileApi';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PublicProfileData } from '@/types/profileType';
 
 interface Conversation {
   _id: string;
@@ -31,6 +33,7 @@ export default function ConversationsScreen() {
   const token = authState.token;
   const messageApi = token ? new MessageApiService(token) : null;
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, PublicProfileData>>({});
   const [loading, setLoading] = useState(true);
   const headerTranslateY = new Animated.Value(0);
 
@@ -50,6 +53,18 @@ export default function ConversationsScreen() {
       const data = await messageApi.getConversations(authState.EntityAccountId);
     //   console.log('Loaded conversations:', data);
       setConversations(data || []);
+
+      // Fetch profiles for participants
+      const ids = [...new Set(data.flatMap(c => c.otherParticipants))];
+      const profilePromises = ids.map(id => publicProfileApi.getByEntityId(id));
+      const profileResults = await Promise.all(profilePromises);
+      const newProfiles: Record<string, PublicProfileData> = {};
+      profileResults.forEach((result, index) => {
+        if (result.success && result.data) {
+          newProfiles[ids[index]] = result.data;
+        }
+      });
+      setProfiles(newProfiles);
     } catch (error) {
       console.error('Error loading conversations:', error);
     } finally {
@@ -74,11 +89,11 @@ export default function ConversationsScreen() {
         onPress={() => handleConversationPress(item._id)}
       >
         <Image
-          source={{ uri: `https://i.pravatar.cc/100?img=${otherParticipantId.slice(0, 2)}` }}
+          source={{ uri: profiles[otherParticipantId]?.avatar || `https://i.pravatar.cc/100?img=${otherParticipantId.slice(0, 2)}` }}
           style={styles.avatar}
         />
         <View style={styles.conversationContent}>
-          <Text style={styles.participantName}>{`User ${otherParticipantId.slice(0, 8)}`}</Text>
+          <Text style={styles.participantName}>{profiles[otherParticipantId]?.name || `User ${otherParticipantId.slice(0, 8)}`}</Text>
           <Text style={styles.lastMessage} numberOfLines={1}>
             {item.last_message_content || 'Chưa có tin nhắn'}
           </Text>
