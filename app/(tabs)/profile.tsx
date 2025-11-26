@@ -87,7 +87,6 @@ const mockAccounts: Account[] = [
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const userId = '1';
   const { authState, logout, updateAuthState } = useAuth();
   const {
     profile,
@@ -97,7 +96,7 @@ export default function ProfileScreen() {
     updateProfileField,
     updateProfileImage,
     setFullProfile,
-  } = useProfile(userId);
+  } = useProfile();
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingField, setEditingField] = useState<string>('');
@@ -113,7 +112,7 @@ export default function ProfileScreen() {
 
   const allPhotos = getAllPhotos(mockPosts);
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = useCallback(async () => {    
     setRefreshing(true);
     await fetchProfile();
     setRefreshing(false);
@@ -207,14 +206,14 @@ export default function ProfileScreen() {
   const handleFollowersPress = () => {
     router.push({
       pathname: '/follow',
-      params: { type: 'followers', userId: userId },
+      params: { type: 'followers', userId: '1' },
     });
   };
 
   const handleFollowingPress = () => {
     router.push({
       pathname: '/follow',
-      params: { type: 'following', userId: userId },
+      params: { type: 'following', userId: '1' },
     });
   };
 
