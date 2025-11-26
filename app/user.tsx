@@ -1,5 +1,7 @@
 import { Post } from '@/constants/feedData';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/hooks/useAuth';
+import { MessageApiService } from '@/services/messageApi';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
@@ -25,6 +27,7 @@ const imageSize = (screenWidth - 32 - 8) / 3;
 export default function UserProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { authState } = useAuth();
   const { user, posts, loading, followUser } = useUserProfile(id!);
   const scrollY = useRef(new Animated.Value(0)).current;
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -55,6 +58,30 @@ export default function UserProfileScreen() {
 
   const handleFollowPress = () => {
     followUser();
+  };
+
+  const handleMessagePress = async () => {
+    if (!authState.token || !authState.EntityAccountId || !id) {
+      Alert.alert('Lỗi', 'Không thể bắt đầu trò chuyện. Vui lòng đăng nhập lại.');
+      return;
+    }
+
+    try {
+      const messageApi = new MessageApiService(authState.token);
+      const conversation = await messageApi.createOrGetConversation(authState.EntityAccountId, id);
+
+      if (conversation && conversation._id) {
+        router.push({
+          pathname: '/conversation',
+          params: { id: conversation._id }
+        });
+      } else {
+        Alert.alert('Lỗi', 'Không thể tạo cuộc trò chuyện');
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      Alert.alert('Lỗi', 'Không thể tạo cuộc trò chuyện. Vui lòng thử lại.');
+    }
   };
 
   const handleSocialLink = (platform: string, username?: string) => {
@@ -227,7 +254,16 @@ export default function UserProfileScreen() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.messageButton}>
+            <TouchableOpacity style={styles.messageButton} onPress={handleMessagePress}>
+              <Ionicons name="chatbubble-outline" size={16} color="#2563eb" />
+              <Text style={styles.messageButtonText}>Nhắn tin</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {user?.id === '10' && (
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.messageButton} onPress={handleMessagePress}>
               <Ionicons name="chatbubble-outline" size={16} color="#2563eb" />
               <Text style={styles.messageButtonText}>Nhắn tin</Text>
             </TouchableOpacity>
@@ -277,6 +313,12 @@ export default function UserProfileScreen() {
         <View style={styles.errorContainer}>
           <Ionicons name="person-outline" size={48} color="#6b7280" />
           <Text style={styles.errorText}>Không tìm thấy người dùng</Text>
+          {id && (
+            <TouchableOpacity style={styles.messageButtonError} onPress={handleMessagePress}>
+              <Ionicons name="chatbubble-outline" size={16} color="#2563eb" />
+              <Text style={styles.messageButtonText}>Nhắn tin</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
     );
@@ -379,6 +421,18 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#6b7280',
+  },
+  messageButtonError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#2563eb',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 20,
   },
   headerContainer: {
     backgroundColor: '#fff',

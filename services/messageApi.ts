@@ -27,7 +27,7 @@ export class MessageApiService {
 
   constructor(token: string) {
     this.token = token;
-    console.log('MessageApiService initialized with token:', token ? `Token length: ${token.length}, starts with: ${token.substring(0, 10)}...` : 'No token');
+    //console.log('MessageApiService initialized with token:', token ? `Token length: ${token.length}, starts with: ${token.substring(0, 10)}...` : 'No token');
   }
 
   private async makeRequest<T>(
@@ -35,7 +35,7 @@ export class MessageApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      console.log('Making API request to:', endpoint);
+      //console.log('Making API request to:', endpoint);
       const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export class MessageApiService {
       });
 
       const data = await response.json();
-      console.log('API response status:', response.status, 'data:', data);
+      //console.log('API response status:', response.status, 'data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'API request failed');

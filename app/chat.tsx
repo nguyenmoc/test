@@ -48,7 +48,7 @@ export default function ConversationsScreen() {
     try {
       setLoading(true);
       const data = await messageApi.getConversations(authState.EntityAccountId);
-      console.log('Loaded conversations:', data);
+    //   console.log('Loaded conversations:', data);
       setConversations(data || []);
     } catch (error) {
       console.error('Error loading conversations:', error);
