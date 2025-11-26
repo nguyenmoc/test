@@ -6,7 +6,7 @@ import { useAuth } from './useAuth';
 
 type FieldValue = string | UploadFile;
 
-export const useProfile = (userId: string) => {
+export const useProfile = () => {
   const [profile, setProfile] = useState<UserProfileData>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
