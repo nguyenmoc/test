@@ -3,7 +3,7 @@ import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { useMessages } from '@/hooks/useMessages';
 import { useSocket } from '@/hooks/useSocket';
-import messageApi, { MessageType } from '@/services/messageApi';
+import { MessageApiService, MessageType } from '@/services/messageApi';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
@@ -54,7 +54,9 @@ export default function ConversationScreen() {
   const router = useRouter();
   const { id: conversationId } = useLocalSearchParams<{ id: string }>();
   const { authState } = useAuth();
-  const currentUserId = authState.currentId;
+  const currentUserId = authState.EntityAccountId;
+  const token = authState.token;
+  const messageApi = token ? new MessageApiService(token) : null;
   const { socket, isConnected } = useSocket();
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -67,7 +69,7 @@ export default function ConversationScreen() {
     error,
     sendMessage: sendMessageHook,
     markAsRead
-  } = useMessages(conversationId || '', currentUserId);
+  } = useMessages(messageApi, conversationId || '', currentUserId);
 
   useEffect(() => {
     if (conversationId) {
@@ -101,9 +103,11 @@ export default function ConversationScreen() {
   }, [socket, conversationId]);
 
   const loadConversation = async () => {
+    if (!messageApi) return;
+
     try {
       // For now, we'll get conversation details from conversations list
-      const conversations = await messageApi.getConversations(currentUserId);
+      const conversations = await messageApi.getConversations(authState.EntityAccountId);
       const conv = conversations.find((c: Conversation) => c._id === conversationId);
       setConversation(conv || null);
     } catch (error) {

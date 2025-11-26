@@ -15,54 +15,69 @@ export interface SendMessageExtra {
   [key: string]: any;
 }
 
-export interface MessageApi {
-  getConversations: (entityAccountId?: string) => Promise<any>;
-  getMessages: (conversationId: string, params?: GetMessagesParams) => Promise<any>;
-  sendMessage: (
-    conversationId: string,
-    content: string,
-    messageType?: MessageType,
-    senderEntityAccountId?: string | null,
-    entityType?: string | null,
-    entityId?: string | null,
-    extra?: SendMessageExtra
-  ) => Promise<any>;
-  markMessagesRead: (conversationId: string, entityAccountId: string, lastMessageId?: string | null) => Promise<any>;
-  createOrGetConversation: (participant1Id: string, participant2Id: string) => Promise<any>;
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message: string;
+  error?: string;
 }
 
+export class MessageApiService {
+  private token: string;
 
-
-// Helper function for fetch requests
-async function fetchApi(endpoint: string, options: RequestInit = {}, token?: string) {
-  const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+  constructor(token: string) {
+    this.token = token;
+    console.log('MessageApiService initialized with token:', token ? `Token length: ${token.length}, starts with: ${token.substring(0, 10)}...` : 'No token');
   }
-  return response.json();
-}
 
-const messageApi: MessageApi = {
-  getConversations: async (entityAccountId?: string) => {
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    try {
+      console.log('Making API request to:', endpoint);
+      const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`,
+          ...options.headers,
+        },
+        ...options,
+      });
+
+      const data = await response.json();
+      console.log('API response status:', response.status, 'data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'API request failed');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('API Error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  async getConversations(entityAccountId?: string): Promise<any> {
     const params = entityAccountId ? `?entityAccountId=${encodeURIComponent(entityAccountId)}` : "";
-    const response = await fetchApi(`/messages/conversations${params}`);
-    return response.data || []; // Return the data array directly
-  },
-  getMessages: async (conversationId: string, params: GetMessagesParams = {}) => {
+    const response = await this.makeRequest<any>(`/messages/conversations${params}`);
+    return response.success ? response.data || [] : [];
+  }
+
+  async getMessages(conversationId: string, params: GetMessagesParams = {}): Promise<any> {
     const query = Object.keys(params).length > 0
       ? "?" + new URLSearchParams(params as Record<string, string>).toString()
       : "";
-    const response = await fetchApi(`/messages/messages/${conversationId}${query}`);
-    return response.data || []; // Return the data array directly
-  },
-  sendMessage: async (
+    const response = await this.makeRequest<any>(`/messages/messages/${conversationId}${query}`);
+    return response.success ? response.data || [] : [];
+  }
+
+  async sendMessage(
     conversationId: string,
     content: string,
     messageType: MessageType = "text",
@@ -70,7 +85,7 @@ const messageApi: MessageApi = {
     entityType: string | null = null,
     entityId: string | null = null,
     extra: SendMessageExtra = {}
-  ) => {
+  ): Promise<any> {
     const body = JSON.stringify({
       conversationId,
       content,
@@ -80,19 +95,19 @@ const messageApi: MessageApi = {
       entityId,
       ...extra,
     });
-    const response = await fetchApi(`/messages/message`, { method: "POST", body });
-    return response.data; // Return the data object
-  },
-  markMessagesRead: async (conversationId: string, entityAccountId: string, lastMessageId: string | null = null) => {
-    const body = JSON.stringify({ conversationId, entityAccountId, lastMessageId });
-    const response = await fetchApi(`/messages/messages/read`, { method: "POST", body });
-    return response; // Return the full response
-  },
-  createOrGetConversation: async (participant1Id: string, participant2Id: string) => {
-    const body = JSON.stringify({ participant1Id, participant2Id });
-    const response = await fetchApi(`/messages/conversation`, { method: "POST", body });
-    return response.data; // Return the data object
-  },
-};
+    const response = await this.makeRequest<any>(`/messages/message`, { method: "POST", body });
+    return response.success ? response.data : null;
+  }
 
-export default messageApi;
+  async markMessagesRead(conversationId: string, entityAccountId: string, lastMessageId: string | null = null): Promise<any> {
+    const body = JSON.stringify({ conversationId, entityAccountId, lastMessageId });
+    const response = await this.makeRequest<any>(`/messages/messages/read`, { method: "POST", body });
+    return response;
+  }
+
+  async createOrGetConversation(participant1Id: string, participant2Id: string): Promise<any> {
+    const body = JSON.stringify({ participant1Id, participant2Id });
+    const response = await this.makeRequest<any>(`/messages/conversation`, { method: "POST", body });
+    return response.success ? response.data : null;
+  }
+}

@@ -1,5 +1,5 @@
-import messageApi, { GetMessagesParams, MessageType } from '@/services/messageApi';
-import { useCallback, useEffect, useState } from 'react';
+import { GetMessagesParams, MessageApiService, MessageType } from '@/services/messageApi';
+import { useCallback, useState } from 'react';
 
 interface Message {
   _id: string;
@@ -36,16 +36,17 @@ interface UseMessagesReturn {
   loadMessages: (params?: GetMessagesParams) => Promise<void>;
   sendMessage: (content: string, messageType?: MessageType) => Promise<boolean>;
   markAsRead: () => Promise<void>;
+  createConversation: (participant1Id: string, participant2Id: string) => Promise<any>;
 }
 
-export const useMessages = (conversationId: string, currentUserId: string): UseMessagesReturn => {
+export const useMessages = (messageApi: MessageApiService | null, conversationId: string, currentUserId: string | undefined): UseMessagesReturn => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
   const loadMessages = useCallback(async (params: GetMessagesParams = {}) => {
-    if (!conversationId) return;
+    if (!conversationId || !messageApi) return;
 
     try {
       setLoading(true);
@@ -70,9 +71,11 @@ export const useMessages = (conversationId: string, currentUserId: string): UseM
     } finally {
       setLoading(false);
     }
-  }, [conversationId]);
+  }, [conversationId, messageApi]);
 
   const sendMessage = useCallback(async (content: string, messageType: MessageType = 'text'): Promise<boolean> => {
+    if (!messageApi || !currentUserId) return false;
+
     try {
       await messageApi.sendMessage(
         conversationId,
@@ -88,20 +91,30 @@ export const useMessages = (conversationId: string, currentUserId: string): UseM
       setError(err instanceof Error ? err.message : 'Failed to send message');
       return false;
     }
-  }, [conversationId, currentUserId]);
+  }, [conversationId, currentUserId, messageApi]);
 
   const markAsRead = useCallback(async () => {
+    if (!messageApi || !currentUserId) return;
+
     try {
       const lastMessageId = messages.length > 0 ? messages[0]._id : null;
       await messageApi.markMessagesRead(conversationId, currentUserId, lastMessageId);
     } catch (err) {
       console.error('Failed to mark messages as read:', err);
     }
-  }, [conversationId, currentUserId, messages]);
+  }, [conversationId, currentUserId, messages, messageApi]);
 
-  useEffect(() => {
-    loadMessages();
-  }, [loadMessages]);
+  const createConversation = useCallback(async (participant1Id: string, participant2Id: string) => {
+    if (!messageApi) return null;
+
+    try {
+      const result = await messageApi.createOrGetConversation(participant1Id, participant2Id);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create conversation');
+      return null;
+    }
+  }, [messageApi]);
 
   return {
     messages,
@@ -111,5 +124,6 @@ export const useMessages = (conversationId: string, currentUserId: string): UseM
     loadMessages,
     sendMessage,
     markAsRead,
+    createConversation,
   };
 };

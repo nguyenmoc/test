@@ -8,21 +8,21 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    Dimensions,
-    Image,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    Share,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  Share,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -253,11 +253,17 @@ export default function HomeScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <TouchableOpacity onPress={() => handleUserPress(item.accountId)}>
+          <TouchableOpacity onPress={() => {
+            console.log('entityAccountId khi nhấp vào avatar:', item.authorEntityAccountId);
+            handleUserPress(item.authorEntityAccountId);
+          }}>
             <Image source={{ uri: item.authorAvatar }} style={styles.avatar} />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <TouchableOpacity onPress={() => handleUserPress(item.accountId)}>
+            <TouchableOpacity onPress={() => {
+              console.log('entityAccountId khi nhấp vào tên:', item.authorEntityAccountId);
+              handleUserPress(item.authorEntityAccountId);
+            }}>
               <Text style={styles.username}>{item.authorName}</Text>
             </TouchableOpacity>
             <Text style={styles.subText}>

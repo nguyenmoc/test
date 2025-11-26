@@ -2,20 +2,20 @@ import { Post } from '@/constants/feedData';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  Linking,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Dimensions,
+    FlatList,
+    Image,
+    Linking,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,10 +30,11 @@ export default function UserProfileScreen() {
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
   useEffect(() => {
+    console.log('ID từ params:', id);
     if (user) {
       console.log('Thông tin hồ sơ:', user);
     }
-  }, [user]);
+  }, [user, id]);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {

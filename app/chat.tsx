@@ -1,6 +1,6 @@
 import AnimatedHeader from '@/components/ui/AnimatedHeader';
 import { useAuth } from '@/hooks/useAuth';
-import messageApi from '@/services/messageApi';
+import { MessageApiService } from '@/services/messageApi';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -28,18 +28,27 @@ export default function ConversationsScreen() {
   const router = useRouter();
   const { authState } = useAuth();
   const currentUserId = authState.currentId;
+  const token = authState.token;
+  const messageApi = token ? new MessageApiService(token) : null;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const headerTranslateY = new Animated.Value(0);
 
   useEffect(() => {
-    loadConversations();
-  }, []);
+    if (token) {
+      loadConversations();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
 
   const loadConversations = async () => {
+    if (!messageApi) return;
+
     try {
       setLoading(true);
-      const data = await messageApi.getConversations(currentUserId);
+      const data = await messageApi.getConversations(authState.EntityAccountId);
+      console.log('Loaded conversations:', data);
       setConversations(data || []);
     } catch (error) {
       console.error('Error loading conversations:', error);
