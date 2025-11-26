@@ -165,12 +165,12 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
                   </TouchableOpacity>
                 ))}
 
-                <TouchableOpacity style={styles.addAccountButton} onPress={handleAddAccount}>
+                {/* <TouchableOpacity style={styles.addAccountButton} onPress={handleAddAccount}>
                   <View style={styles.addAccountIcon}>
                     <Ionicons name="add" size={24} color="#2563eb" />
                   </View>
                   <Text style={styles.addAccountText}>Thêm tài khoản</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </>
             )}
           </View>
