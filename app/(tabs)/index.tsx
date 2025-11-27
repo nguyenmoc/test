@@ -253,11 +253,17 @@ export default function HomeScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <TouchableOpacity onPress={() => handleUserPress(item.authorEntityAccountId)}>
+          <TouchableOpacity onPress={() => {
+            console.log('entityAccountId khi nhấp vào avatar:', item.authorEntityAccountId);
+            handleUserPress(item.authorEntityAccountId);
+          }}>
             <Image source={{ uri: item.authorAvatar }} style={styles.avatar} />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <TouchableOpacity onPress={() => handleUserPress(item.authorEntityAccountId)}>
+            <TouchableOpacity onPress={() => {
+              console.log('entityAccountId khi nhấp vào tên:', item.authorEntityAccountId);
+              handleUserPress(item.authorEntityAccountId);
+            }}>
               <Text style={styles.username}>{item.authorName}</Text>
             </TouchableOpacity>
             <Text style={styles.subText}>
@@ -366,6 +372,8 @@ export default function HomeScreen() {
         title="Smoker App"
         subtitle="Chia sẻ khoảnh khắc"
         headerTranslateY={headerTranslateY}
+        iconName="chatbubble-outline"
+        onIconPress={() => router.push('/chat')}
       />
 
       <Animated.FlatList
